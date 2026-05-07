@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Search, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import type { MasterCategory, ShoppingItem, ShoppingList } from '../types';
 import { generateListId, generateVisibleId, saveShoppingList } from '../lib/db';
 import { Header, BottomBar, Btn, Pill, FreqTag, Checkbox, Toast, inputClass } from '../components/ui';
@@ -12,17 +13,17 @@ interface Props {
 }
 
 export default function NewListScreen({ userId, master, onCreated, onBack }: Props) {
-  const [date, setDate] = useState('');
+  const [date, setDate]   = useState('');
   const [store, setStore] = useState('');
-  const [sel, setSel] = useState<Record<string, boolean>>({});
+  const [sel, setSel]     = useState<Record<string, boolean>>({});
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>(() => {
     const c: Record<number, boolean> = {};
-    master.forEach((_, i) => c[i] = true);
+    master.forEach((_, i) => { c[i] = true; });
     return c;
   });
   const [filter, setFilter] = useState<'all' | 'monthly' | 'occasional'>('all');
   const [search, setSearch] = useState('');
-  const { message, fire } = useToast();
+  const { message, fire }   = useToast();
 
   const selCount = Object.values(sel).filter(Boolean).length;
 
@@ -34,13 +35,13 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
           items.push({
             name: item.name, freq: item.freq,
             category: cat.name, catIcon: cat.icon, catColor: cat.color,
-            checked: false
+            checked: false,
           });
         }
       });
     });
     if (!items.length) { fire('בחר לפחות פריט אחד'); return; }
-    if (!date) { fire('בחר תאריך'); return; }
+    if (!date)         { fire('בחר תאריך');           return; }
 
     const list: ShoppingList = {
       id: generateListId(),
@@ -48,35 +49,55 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
       userId, date,
       store: store || 'רמי לוי',
       items, closed: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     await saveShoppingList(list);
     onCreated(list);
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-28">
-      <Header title="רשימה חדשה" subtitle={`${selCount} פריטים נבחרו`} onBack={onBack} />
+    <div className="min-h-dvh bg-slate-50 pb-28">
+      <Header
+        title="רשימה חדשה"
+        subtitle={selCount ? `${selCount} פריטים נבחרו` : 'בחר פריטים'}
+        onBack={onBack}
+      />
 
-      {/* Details section */}
-      <div className="sticky top-[76px] z-40 bg-[#faf8f5] border-b border-[#e8e4df]">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-2">
+      {/* Sticky details + filters */}
+      <div className="sticky top-[61px] z-40 bg-slate-50 border-b border-slate-100">
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-2.5">
           <div className="flex gap-2 mb-3">
-            <input type="date" value={date} onChange={e => setDate(e.target.value)}
-              className={inputClass + ' flex-1'} />
-            <input placeholder="🏪 חנות" value={store} onChange={e => setStore(e.target.value)}
-              className={inputClass} style={{ flex: 0.7 }} />
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className={inputClass + ' flex-1'}
+            />
+            <input
+              placeholder="חנות"
+              value={store}
+              onChange={e => setStore(e.target.value)}
+              className={inputClass}
+              style={{ flex: 0.65 }}
+            />
           </div>
 
-          <div className="h-px bg-[#e8e4df] my-2" />
+          <div className="relative mb-2.5">
+            <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" />
+            <input
+              placeholder="חיפוש פריט..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full py-2.5 pr-10 pl-4 border border-slate-200 rounded-xl text-sm
+                outline-none bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
+                transition-all font-[inherit] placeholder:text-slate-400"
+            />
+          </div>
 
-          <input placeholder="🔍 חיפוש פריט..." value={search}
-            onChange={e => setSearch(e.target.value)}
-            className={inputClass + ' mb-2'} />
-          <div className="flex gap-1.5 pb-1">
+          <div className="flex gap-1.5">
             {(['all', 'monthly', 'occasional'] as const).map(f => (
               <Pill key={f} active={filter === f} onClick={() => setFilter(f)}>
-                {f === 'all' ? 'הכל' : f === 'monthly' ? '🔄 חודשי' : '📅 מדי פעם'}
+                {f === 'all' ? 'הכל' : f === 'monthly' ? 'חודשי' : 'מדי פעם'}
               </Pill>
             ))}
           </div>
@@ -84,44 +105,83 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
       </div>
 
       {/* Categories */}
-      <div className="max-w-lg mx-auto px-4 py-2">
+      <div className="max-w-lg mx-auto px-4 py-3 flex flex-col gap-2">
         {master.map((cat, ci) => {
           const items = cat.items
             .map((item, ii) => ({ ...item, key: `${ci}-${ii}`, checked: !!sel[`${ci}-${ii}`] }))
             .filter(i => (filter === 'all' || i.freq === filter) && (!search || i.name.includes(search)));
           if (!items.length) return null;
-          const isCol = collapsed[ci] !== false;
-          const catSel = items.filter(i => i.checked).length;
+
+          const isCol   = collapsed[ci] !== false;
+          const catSel  = items.filter(i => i.checked).length;
+          const allSel  = catSel === items.length && items.length > 0;
 
           return (
-            <div key={ci} className="mb-2.5 rounded-[14px] overflow-hidden bg-white shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-              <div onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
-                className="flex items-center gap-2.5 py-3.5 px-4 cursor-pointer select-none">
-                <div className="w-9 h-9 rounded-[10px] flex items-center justify-center text-xl shrink-0"
-                  style={{ background: cat.color + '15', color: cat.color }}>{cat.icon}</div>
-                <div className="flex-1 font-bold text-[15px]" style={{ color: cat.color }}>{cat.name}</div>
-                <span className="text-[10px] py-0.5 px-2 rounded-md font-semibold bg-[#e8f5e9] text-[#2e7d32]">
-                  {catSel} נבחרו
-                </span>
-                <span className="text-xs text-gray-400 transition-transform"
-                  style={{ transform: isCol ? 'rotate(90deg)' : 'none' }}>◀</span>
-              </div>
+            <div key={ci} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+              <button
+                onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
+                className="w-full flex items-center gap-3 py-3.5 px-4 cursor-pointer
+                  hover:bg-slate-50/60 transition-colors"
+                style={{ fontFamily: 'inherit' }}
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{ background: cat.color + '18', color: cat.color }}
+                >
+                  {cat.icon}
+                </div>
+                <div className="flex-1 font-bold text-[14px] text-right" style={{ color: cat.color }}>
+                  {cat.name}
+                </div>
+                {catSel > 0 && (
+                  <span
+                    className="text-[11px] py-0.5 px-2.5 rounded-full font-semibold"
+                    style={{
+                      background: allSel ? '#d1fae5' : '#eef2ff',
+                      color:      allSel ? '#059669' : '#6366f1',
+                    }}
+                  >
+                    {catSel} נבחרו
+                  </span>
+                )}
+                {isCol
+                  ? <ChevronDown size={16} className="text-slate-400 shrink-0" />
+                  : <ChevronUp   size={16} className="text-slate-400 shrink-0" />}
+              </button>
+
               {!isCol && (
-                <div className="px-2.5 pb-2.5">
-                  <div className="flex gap-2 mb-1.5 pr-1">
-                    <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => n[i.key] = true); return n; })}
-                      className="border-none bg-[#e8f5e9] text-[#2e7d32] py-1 px-3 rounded-lg text-[11px] font-semibold cursor-pointer"
-                      style={{ fontFamily: 'inherit' }}>בחר הכל</button>
-                    <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => delete n[i.key]); return n; })}
-                      className="border-none bg-[#ffeaea] text-[#d32f2f] py-1 px-3 rounded-lg text-[11px] font-semibold cursor-pointer"
-                      style={{ fontFamily: 'inherit' }}>נקה הכל</button>
+                <div className="px-3 pb-3 border-t border-slate-50">
+                  {/* Select all / clear */}
+                  <div className="flex gap-2 mb-2 pt-1">
+                    <button
+                      onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { n[i.key] = true; }); return n; })}
+                      className="flex items-center gap-1.5 border-none bg-indigo-50 text-indigo-600
+                        py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer
+                        active:scale-95 transition-all"
+                      style={{ fontFamily: 'inherit' }}
+                    >
+                      <Check size={11} /> בחר הכל
+                    </button>
+                    <button
+                      onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { delete n[i.key]; }); return n; })}
+                      className="flex items-center gap-1.5 border-none bg-slate-100 text-slate-500
+                        py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer
+                        active:scale-95 transition-all"
+                      style={{ fontFamily: 'inherit' }}
+                    >
+                      נקה
+                    </button>
                   </div>
+
                   {items.map(item => (
-                    <div key={item.key}
+                    <div
+                      key={item.key}
                       onClick={() => setSel(p => ({ ...p, [item.key]: !p[item.key] }))}
-                      className="flex items-center gap-3 py-2.5 px-2 rounded-[10px] cursor-pointer hover:bg-black/[0.02]">
-                      <Checkbox checked={item.checked} color="#e63946" />
-                      <div className="flex-1 text-sm">{item.name}</div>
+                      className="flex items-center gap-3 py-2.5 px-1.5 rounded-xl
+                        cursor-pointer hover:bg-slate-50 transition-colors"
+                    >
+                      <Checkbox checked={item.checked} color="#6366f1" />
+                      <div className="flex-1 text-sm text-slate-800">{item.name}</div>
                       <FreqTag freq={item.freq} />
                     </div>
                   ))}
@@ -133,9 +193,17 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
       </div>
 
       <BottomBar>
-        <Btn bg="#f0f0f0" fg="#666" onClick={onBack}>ביטול</Btn>
-        <Btn bg="#e63946" fg="#fff" onClick={handleCreate} flex={1.5}>צור רשימה ({selCount}) ✨</Btn>
+        <Btn bg="#f1f5f9" fg="#64748b" onClick={onBack}>ביטול</Btn>
+        <Btn
+          bg="#6366f1" fg="#fff"
+          onClick={handleCreate}
+          flex={1.5}
+          className="shadow-sm shadow-indigo-200"
+        >
+          צור רשימה {selCount > 0 ? `(${selCount})` : ''}
+        </Btn>
       </BottomBar>
+
       <Toast msg={message} />
     </div>
   );

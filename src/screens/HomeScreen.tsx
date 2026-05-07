@@ -1,6 +1,5 @@
+import { ShoppingCart, ClipboardList, Settings, LogOut, ChevronLeft } from 'lucide-react';
 import type { User, ShoppingList } from '../types';
-import { Header, Toast } from '../components/ui';
-import { useToast } from '../hooks/useToast';
 
 interface Props {
   user: User;
@@ -10,51 +9,95 @@ interface Props {
 }
 
 export default function HomeScreen({ user, lists, onNavigate, onLogout }: Props) {
-  const openCount = lists.filter(l => !l.closed).length;
-  const closedCount = lists.filter(l => l.closed).length;
-  const { message } = useToast();
+  const openCount  = lists.filter(l => !l.closed).length;
+  const closedCount = lists.filter(l =>  l.closed).length;
 
-  const buttons = [
+  const menuItems = [
     {
-      icon: '➕', bg: '#e8f5e9', fg: '#2d6a4f',
-      title: 'רשימה חדשה', sub: 'בחר פריטים מהמאסטר',
-      action: () => onNavigate('new')
+      icon: <ShoppingCart size={22} />,
+      iconBg: 'bg-indigo-500',
+      title: 'רשימה חדשה',
+      sub: 'בחר פריטים מהמאסטר',
+      action: () => onNavigate('new'),
     },
     {
-      icon: '📋', bg: '#e3f2fd', fg: '#0077b6',
-      title: 'הרשימות שלי', sub: `${openCount} פתוחות · ${closedCount} סגורות`,
-      action: () => onNavigate('lists')
+      icon: <ClipboardList size={22} />,
+      iconBg: 'bg-emerald-500',
+      title: 'הרשימות שלי',
+      sub: `${openCount} פתוחות · ${closedCount} סגורות`,
+      action: () => onNavigate('lists'),
     },
     {
-      icon: '⚙️', bg: '#fff3e0', fg: '#e65100',
-      title: 'רשימת מאסטר', sub: 'עריכת הפריטים הקבועים',
-      action: () => onNavigate('master')
+      icon: <Settings size={22} />,
+      iconBg: 'bg-slate-500',
+      title: 'רשימת מאסטר',
+      sub: 'עריכת הפריטים הקבועים',
+      action: () => onNavigate('master'),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#faf8f5]">
-      <Header title={`🛒 שלום, ${user.name}`} subtitle="מה בתפריט היום?" onBack={onLogout} />
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div
+        className="bg-indigo-500 pt-14 pb-8 px-5 relative overflow-hidden"
+        style={{ boxShadow: '0 4px 24px rgba(99,102,241,0.22)' }}
+      >
+        <div className="absolute -top-6 -left-6 w-36 h-36 rounded-full bg-white/8 pointer-events-none" />
+        <div className="absolute top-4 -right-10 w-44 h-44 rounded-full bg-white/6 pointer-events-none" />
 
-      <div className="max-w-lg mx-auto px-4 py-4">
-        {buttons.map((b, i) => (
-          <button key={i} onClick={b.action}
-            className="flex items-center gap-3.5 bg-white rounded-2xl py-5 px-5
-              shadow-[0_2px_14px_rgba(0,0,0,0.05)] cursor-pointer border-none w-full
-              text-right mb-2.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-shadow"
-            style={{ fontFamily: 'inherit' }}>
-            <div className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0"
-              style={{ background: b.bg, color: b.fg }}>
-              {b.icon}
+        <div className="relative flex items-start justify-between">
+          <button
+            onClick={onLogout}
+            className="w-9 h-9 bg-white/15 hover:bg-white/25 active:scale-95
+              rounded-xl flex items-center justify-center transition-all mt-0.5"
+          >
+            <LogOut size={16} color="white" />
+          </button>
+
+          <div className="text-right">
+            <p className="text-white/65 text-sm font-normal">שלום,</p>
+            <h1 className="text-white text-2xl font-extrabold tracking-tight leading-tight">
+              {user.name}
+            </h1>
+          </div>
+        </div>
+
+        {openCount > 0 && (
+          <div className="relative mt-5 bg-white/15 rounded-2xl py-3 px-4 flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse shrink-0" />
+            <span className="text-white text-sm font-medium">
+              {openCount} רשימ{openCount === 1 ? 'ה פתוחה' : 'ות פתוחות'} ממתינות
+            </span>
+            <ChevronLeft size={16} className="text-white/60 mr-auto" />
+          </div>
+        )}
+      </div>
+
+      {/* Menu cards */}
+      <div className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-3">
+        {menuItems.map((item, i) => (
+          <button
+            key={i}
+            onClick={item.action}
+            className="flex items-center gap-4 bg-white rounded-2xl py-5 px-5
+              border border-slate-100 shadow-sm w-full text-right
+              hover:border-slate-200 hover:shadow-md active:scale-[0.99]
+              transition-all"
+            style={{ fontFamily: 'inherit', animation: `fadeUp .3s ease ${i * 60}ms both` }}
+          >
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+              text-white shrink-0 ${item.iconBg}`}>
+              {item.icon}
             </div>
-            <div>
-              <div className="font-bold text-base">{b.title}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{b.sub}</div>
+            <div className="flex-1">
+              <div className="font-bold text-[15px] text-slate-900">{item.title}</div>
+              <div className="text-xs text-slate-400 mt-0.5 font-normal">{item.sub}</div>
             </div>
+            <ChevronLeft size={18} className="text-slate-300" />
           </button>
         ))}
       </div>
-      <Toast msg={message} />
     </div>
   );
 }

@@ -1,20 +1,23 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
   --font-rubik: 'Rubik', sans-serif;
-  --color-brand: #e63946;
-  --color-brand-light: #fff1f2;
-  --color-green: #2d6a4f;
-  --color-green-light: #d8f3dc;
-  --color-surface: #faf8f5;
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-primary-light: #eef2ff;
+  --color-surface: #f8fafc;
   --color-card: #ffffff;
-  --color-border: #e8e4df;
-  --color-navy: #1a1a2e;
-  --color-navy-mid: #16213e;
-  --color-navy-light: #0f3460;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-green: #10b981;
+  --color-green-light: #d1fae5;
+  --color-red: #ef4444;
+  --color-red-light: #fee2e2;
+  --color-amber: #f59e0b;
+  --color-amber-light: #fef3c7;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap');
 
 * {
   box-sizing: border-box;
@@ -24,13 +27,35 @@
 
 body {
   font-family: 'Rubik', sans-serif;
-  background: #faf8f5;
-  color: #1a1a1a;
+  background: #f8fafc;
+  color: #0f172a;
   direction: rtl;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0);    }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }

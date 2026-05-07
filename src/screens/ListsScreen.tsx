@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Search, Trash2, Lock, CheckSquare, X } from 'lucide-react';
 import type { ShoppingList } from '../types';
 import { deleteShoppingList, updateShoppingList } from '../lib/db';
 import { formatDate } from '../lib/utils';
-import { Header, Pill, Toast, inputClass } from '../components/ui';
+import { Header, Pill, Toast, Card, SectionLabel } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
 interface Props {
@@ -13,21 +14,21 @@ interface Props {
 }
 
 export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Props) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch]   = useState('');
   const [selMode, setSelMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { message, fire } = useToast();
 
-  const openLists = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const closedLists = lists.filter(l => l.closed).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const openLists   = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const closedLists = lists.filter(l =>  l.closed).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const filterList = (l: ShoppingList) =>
     !search || l.visibleId.includes(search) || l.id.includes(search) ||
     formatDate(l.date).includes(search) || l.store.includes(search);
 
-  const filteredOpen = openLists.filter(filterList);
+  const filteredOpen   = openLists.filter(filterList);
   const filteredClosed = closedLists.filter(filterList);
-  const allSelOpen = [...selected].every(id => openLists.find(l => l.id === id));
+  const allSelOpen     = [...selected].every(id => openLists.find(l => l.id === id));
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -39,19 +40,15 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
 
   async function handleClose() {
     const updated = lists.map(l => selected.has(l.id) ? { ...l, closed: true } : l);
-    for (const id of selected) {
-      await updateShoppingList(id, { closed: true });
-    }
+    for (const id of selected) await updateShoppingList(id, { closed: true });
     onUpdate(updated);
     setSelected(new Set());
     setSelMode(false);
-    fire('הרשימות נסגרו ✅');
+    fire('הרשימות נסגרו');
   }
 
   async function handleDelete() {
-    for (const id of selected) {
-      await deleteShoppingList(id);
-    }
+    for (const id of selected) await deleteShoppingList(id);
     onUpdate(lists.filter(l => !selected.has(l.id)));
     setSelected(new Set());
     setSelMode(false);
@@ -60,111 +57,161 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
 
   function ListCard({ list, isClosed }: { list: ShoppingList; isClosed?: boolean }) {
     const done = list.items.filter(i => i.checked).length;
-    const s = selected.has(list.id);
+    const pct  = list.items.length ? (done / list.items.length) * 100 : 0;
+    const sel  = selected.has(list.id);
 
     return (
-      <div
-        className={`rounded-[14px] py-3.5 px-4 mb-2 cursor-pointer border-2 transition-all
-          shadow-[0_2px_10px_rgba(0,0,0,0.04)]
-          ${s ? 'bg-[#fff1f2] border-[#e63946]' : 'bg-white border-transparent'}
-          ${isClosed ? 'opacity-60' : ''}`}
-        onClick={() => {
-          if (selMode) toggleSelect(list.id);
-          else onOpenList(list.id);
-        }}>
-        <div className="flex justify-between items-start mb-1">
-          <div>
-            <div className="font-bold text-base">
-              📅 {formatDate(list.date)}
-              <span className="text-sm text-gray-400 font-medium mr-2">{list.store}</span>
+      <Card
+        selected={sel}
+        muted={isClosed}
+        onClick={() => selMode ? toggleSelect(list.id) : onOpenList(list.id)}
+        className="overflow-hidden"
+      >
+        <div className="py-3.5 px-4">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-[14px] text-slate-900 flex items-center gap-1.5">
+                <span>{formatDate(list.date)}</span>
+                <span className="text-slate-300 font-normal">·</span>
+                <span className="text-slate-500 font-medium text-[13px]">{list.store}</span>
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5 font-normal">{list.visibleId}</div>
             </div>
-            <div className="text-[11px] text-gray-400 mt-0.5">{list.visibleId}</div>
+            {isClosed ? (
+              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5
+                rounded-full font-semibold bg-slate-100 text-slate-400 whitespace-nowrap shrink-0">
+                <Lock size={9} /> סגורה
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5
+                rounded-full font-semibold bg-emerald-50 text-emerald-600 whitespace-nowrap shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                פתוחה
+              </span>
+            )}
           </div>
-          <span className={`text-[10px] py-0.5 px-2 rounded-md font-semibold whitespace-nowrap ${
-            isClosed ? 'bg-gray-100 text-gray-400' : 'bg-[#e8f5e9] text-[#2e7d32]'
-          }`}>
-            {isClosed ? 'סגורה 🔒' : 'פתוחה'}
-          </span>
+
+          {!isClosed && list.items.length > 0 && (
+            <div className="mt-2.5">
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${pct}%`,
+                    background: pct === 100 ? '#10b981' : '#6366f1',
+                  }}
+                />
+              </div>
+              <div className="text-[11px] text-slate-400 mt-1.5 font-normal">
+                {done}/{list.items.length} פריטים
+              </div>
+            </div>
+          )}
+
+          {isClosed && (
+            <div className="text-[11px] text-slate-400 mt-1 font-normal">
+              {done}/{list.items.length} פריטים
+            </div>
+          )}
         </div>
-        {!isClosed && (
-          <>
-            <div className="mt-2 h-1.5 bg-gray-100 rounded-sm overflow-hidden">
-              <div className="h-full rounded-sm transition-all duration-300"
-                style={{
-                  width: `${(done / list.items.length) * 100}%`,
-                  background: 'linear-gradient(90deg, #2d6a4f, #52b788)'
-                }} />
-            </div>
-            <div className="text-[11px] text-gray-400 mt-1">{done}/{list.items.length} פריטים</div>
-          </>
-        )}
-        {isClosed && (
-          <div className="text-[11px] text-gray-400 mt-1">
-            {done}/{list.items.length} פריטים
-          </div>
-        )}
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-28">
-      <Header title="📋 הרשימות שלי"
+    <div className="min-h-dvh bg-slate-50 pb-28">
+      <Header
+        title="הרשימות שלי"
         subtitle={`${openLists.length} פתוחות · ${closedLists.length} סגורות`}
-        onBack={onBack} />
+        onBack={onBack}
+      />
 
-      <div className="sticky top-[76px] z-40 bg-[#faf8f5] border-b border-[#e8e4df] px-4 py-2.5 flex gap-2">
-        <input placeholder="🔍 חיפוש מזהה / תאריך..." value={search}
-          onChange={e => setSearch(e.target.value)} className={inputClass + ' flex-1'} />
-        <Pill active={selMode} onClick={() => { setSelMode(!selMode); setSelected(new Set()); }}>
-          {selMode ? '✕' : 'בחירה'}
-        </Pill>
+      {/* Toolbar */}
+      <div className="sticky top-[61px] z-40 bg-slate-50 border-b border-slate-100 px-4 py-2.5">
+        <div className="relative mb-2">
+          <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" />
+          <input
+            placeholder="חיפוש..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full py-2.5 pr-10 pl-4 border border-slate-200 rounded-xl text-sm
+              outline-none bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
+              transition-all font-[inherit] placeholder:text-slate-400"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Pill active={selMode} onClick={() => { setSelMode(!selMode); setSelected(new Set()); }}>
+            {selMode ? 'ביטול' : 'בחירה'}
+          </Pill>
+        </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-2">
+      <div className="max-w-lg mx-auto px-4 py-3">
         {filteredOpen.length > 0 && (
           <>
-            <div className="text-[13px] font-bold text-[#2d6a4f] mb-2 mt-1.5 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2d6a4f]" />
-              רשימות פתוחות ({filteredOpen.length})
-            </div>
+            <SectionLabel label={`פתוחות (${filteredOpen.length})`} color="#10b981" dot="#10b981" />
             {filteredOpen.map(l => <ListCard key={l.id} list={l} />)}
           </>
         )}
         {filteredClosed.length > 0 && (
           <>
-            <div className="text-[13px] font-bold text-gray-400 mb-2 mt-5 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-gray-400" />
-              רשימות סגורות ({filteredClosed.length})
-            </div>
+            <SectionLabel label={`סגורות (${filteredClosed.length})`} color="#94a3b8" dot="#94a3b8" />
             {filteredClosed.map(l => <ListCard key={l.id} list={l} isClosed />)}
           </>
         )}
         {!filteredOpen.length && !filteredClosed.length && (
-          <div className="text-center py-10 text-gray-300">
-            <div className="text-4xl mb-2">📝</div>
-            <div className="font-semibold">{search ? 'לא נמצאו רשימות' : 'אין עדיין רשימות'}</div>
+          <div className="text-center py-14">
+            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Search size={24} className="text-slate-400" />
+            </div>
+            <div className="font-semibold text-slate-400 text-sm">
+              {search ? 'לא נמצאו רשימות' : 'אין עדיין רשימות'}
+            </div>
           </div>
         )}
       </div>
 
+      {/* Bulk action bar */}
       {selMode && selected.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e8e4df]
-          py-3 px-5 flex gap-2.5 z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm
+            border-t border-slate-100 py-3 px-4 flex gap-2.5 z-50"
+          style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.07)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+        >
           {allSelOpen && (
-            <button onClick={handleClose}
-              className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#fff3e0] text-[#e65100]"
-              style={{ fontFamily: 'inherit' }}>
+            <button
+              onClick={handleClose}
+              className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
+                bg-amber-50 text-amber-700 flex items-center justify-center gap-2
+                active:scale-95 transition-all"
+              style={{ fontFamily: 'inherit' }}
+            >
+              <Lock size={15} />
               סגור ({selected.size})
             </button>
           )}
-          <button onClick={handleDelete}
-            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#ffeaea] text-[#d32f2f]"
-            style={{ fontFamily: 'inherit' }}>
-            מחק ({selected.size}) 🗑️
+          <button
+            onClick={handleDelete}
+            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
+              bg-red-50 text-red-600 flex items-center justify-center gap-2
+              active:scale-95 transition-all"
+            style={{ fontFamily: 'inherit' }}
+          >
+            <Trash2 size={15} />
+            מחק ({selected.size})
+          </button>
+          <button
+            onClick={() => { setSelMode(false); setSelected(new Set()); }}
+            className="w-12 h-12 border-none rounded-xl cursor-pointer
+              bg-slate-100 text-slate-500 flex items-center justify-center
+              active:scale-95 transition-all shrink-0"
+            style={{ fontFamily: 'inherit' }}
+          >
+            <X size={18} />
           </button>
         </div>
       )}
+
       <Toast msg={message} />
     </div>
   );
