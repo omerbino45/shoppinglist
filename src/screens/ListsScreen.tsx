@@ -3,7 +3,7 @@ import { Search, Trash2, Lock, X } from 'lucide-react';
 import type { ShoppingList } from '../types';
 import { deleteShoppingList, updateShoppingList } from '../lib/db';
 import { formatDate } from '../lib/utils';
-import { Header, Pill, Toast, Card, SectionLabel } from '../components/ui';
+import { Header, Pill, Toast, Card, SectionLabel, EmptyState } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
 interface Props {
@@ -13,11 +13,17 @@ interface Props {
   onBack: () => void;
 }
 
+function progressGradient(pct: number): string {
+  if (pct === 100) return 'linear-gradient(to right, #10b981, #059669)';
+  if (pct >= 80)   return 'linear-gradient(to right, #6366f1, #10b981)';
+  return                  'linear-gradient(to right, #8b5cf6, #6366f1)';
+}
+
 export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Props) {
-  const [search, setSearch]   = useState('');
-  const [selMode, setSelMode] = useState(false);
+  const [search, setSearch]     = useState('');
+  const [selMode, setSelMode]   = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const { message, fire } = useToast();
+  const { message, fire }       = useToast();
 
   const openLists   = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const closedLists = lists.filter(l =>  l.closed).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -42,22 +48,20 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
     const updated = lists.map(l => selected.has(l.id) ? { ...l, closed: true } : l);
     for (const id of selected) await updateShoppingList(id, { closed: true });
     onUpdate(updated);
-    setSelected(new Set());
-    setSelMode(false);
+    setSelected(new Set()); setSelMode(false);
     fire('הרשימות נסגרו');
   }
 
   async function handleDelete() {
     for (const id of selected) await deleteShoppingList(id);
     onUpdate(lists.filter(l => !selected.has(l.id)));
-    setSelected(new Set());
-    setSelMode(false);
+    setSelected(new Set()); setSelMode(false);
     fire('נמחק!');
   }
 
   function ListCard({ list, isClosed }: { list: ShoppingList; isClosed?: boolean }) {
     const done = list.items.filter(i => i.checked).length;
-    const pct  = list.items.length ? (done / list.items.length) * 100 : 0;
+    const pct  = list.items.length ? Math.round((done / list.items.length) * 100) : 0;
     const sel  = selected.has(list.id);
 
     return (
@@ -78,15 +82,12 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
               <div className="text-[11px] text-slate-400 mt-0.5 font-normal">{list.visibleId}</div>
             </div>
             {isClosed ? (
-              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5
-                rounded-full font-semibold bg-slate-100 text-slate-400 whitespace-nowrap shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5 rounded-full font-semibold bg-slate-100 text-slate-400 whitespace-nowrap shrink-0">
                 <Lock size={9} /> סגורה
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5
-                rounded-full font-semibold bg-emerald-50 text-emerald-600 whitespace-nowrap shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                פתוחה
+              <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5 rounded-full font-semibold bg-emerald-50 text-emerald-600 whitespace-nowrap shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> פתוחה
               </span>
             )}
           </div>
@@ -94,24 +95,14 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
           {!isClosed && list.items.length > 0 && (
             <div className="mt-2.5">
               <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${pct}%`,
-                    background: pct === 100 ? '#10b981' : '#6366f1',
-                  }}
-                />
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: progressGradient(pct) }} />
               </div>
-              <div className="text-[11px] text-slate-400 mt-1.5 font-normal">
-                {done}/{list.items.length} פריטים
-              </div>
+              <div className="text-[11px] text-slate-400 mt-1.5 font-normal">{done}/{list.items.length} פריטים</div>
             </div>
           )}
-
           {isClosed && (
-            <div className="text-[11px] text-slate-400 mt-1 font-normal">
-              {done}/{list.items.length} פריטים
-            </div>
+            <div className="text-[11px] text-slate-400 mt-1 font-normal">{done}/{list.items.length} פריטים</div>
           )}
         </div>
       </Card>
@@ -127,7 +118,7 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
       />
 
       {/* Toolbar */}
-      <div className="sticky top-[61px] z-40 bg-slate-50 border-b border-slate-100 px-4 py-2.5">
+      <div className="sticky top-[73px] z-40 bg-slate-50 border-b border-slate-100 px-4 py-2.5">
         <div className="relative mb-2">
           <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" />
           <input
@@ -135,7 +126,7 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full py-2.5 pr-10 pl-4 border border-slate-200 rounded-xl text-sm
-              outline-none bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
+              outline-none bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100
               transition-all font-[inherit] placeholder:text-slate-400"
           />
         </div>
@@ -160,53 +151,33 @@ export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Pro
           </>
         )}
         {!filteredOpen.length && !filteredClosed.length && (
-          <div className="text-center py-14">
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <Search size={24} className="text-slate-400" />
-            </div>
-            <div className="font-semibold text-slate-400 text-sm">
-              {search ? 'לא נמצאו רשימות' : 'אין עדיין רשימות'}
-            </div>
-          </div>
+          <EmptyState
+            icon={<Search size={28} />}
+            title={search ? 'לא נמצאו רשימות' : 'אין עדיין רשימות'}
+            sub={search ? undefined : 'צור רשימה חדשה מהתפריט הראשי'}
+          />
         )}
       </div>
 
       {/* Bulk action bar */}
       {selMode && selected.size > 0 && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm
-            border-t border-slate-100 py-3 px-4 flex gap-2.5 z-50"
-          style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.07)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-        >
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 py-3 px-4 flex gap-2.5 z-50"
+          style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.07)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           {allSelOpen && (
-            <button
-              onClick={handleClose}
-              className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
-                bg-amber-50 text-amber-700 flex items-center justify-center gap-2
-                active:scale-95 transition-all"
-              style={{ fontFamily: 'inherit' }}
-            >
-              <Lock size={15} />
-              סגור ({selected.size})
+            <button onClick={handleClose}
+              className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-amber-50 text-amber-700 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              style={{ fontFamily: 'inherit' }}>
+              <Lock size={15} /> סגור ({selected.size})
             </button>
           )}
-          <button
-            onClick={handleDelete}
-            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
-              bg-red-50 text-red-600 flex items-center justify-center gap-2
-              active:scale-95 transition-all"
-            style={{ fontFamily: 'inherit' }}
-          >
-            <Trash2 size={15} />
-            מחק ({selected.size})
+          <button onClick={handleDelete}
+            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-red-50 text-red-600 flex items-center justify-center gap-2 active:scale-95 transition-all"
+            style={{ fontFamily: 'inherit' }}>
+            <Trash2 size={15} /> מחק ({selected.size})
           </button>
-          <button
-            onClick={() => { setSelMode(false); setSelected(new Set()); }}
-            className="w-12 h-12 border-none rounded-xl cursor-pointer
-              bg-slate-100 text-slate-500 flex items-center justify-center
-              active:scale-95 transition-all shrink-0"
-            style={{ fontFamily: 'inherit' }}
-          >
+          <button onClick={() => { setSelMode(false); setSelected(new Set()); }}
+            className="w-12 h-12 border-none rounded-xl cursor-pointer bg-slate-100 text-slate-500 flex items-center justify-center active:scale-95 transition-all shrink-0"
+            style={{ fontFamily: 'inherit' }}>
             <X size={18} />
           </button>
         </div>
