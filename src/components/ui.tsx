@@ -1,7 +1,62 @@
 import React from 'react';
 import { ChevronRight, RefreshCw, Calendar } from 'lucide-react';
 
-// ─── Toast ───────────────────────────────────────────────────────────────────
+// ─── Wave decoration ─────────────────────────────────────────────────────────
+export function WaveBottom({ fill = '#f8fafc' }: { fill?: string }) {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden" style={{ height: 40 }}>
+      {/* Primary wave */}
+      <svg
+        className="absolute bottom-0 left-0 w-full h-full"
+        viewBox="0 0 1440 40"
+        preserveAspectRatio="none"
+      >
+        <path d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z" fill={fill} />
+      </svg>
+      {/* Secondary wave — animated drift */}
+      <svg
+        className="absolute bottom-0 left-0 w-full h-full opacity-30"
+        viewBox="0 0 1440 40"
+        preserveAspectRatio="none"
+        style={{ animation: 'wave-drift 6s ease-in-out infinite' }}
+      >
+        <path d="M0,28 C480,8 960,40 1440,24 L1440,40 L0,40 Z" fill={fill} />
+      </svg>
+    </div>
+  );
+}
+
+// ─── Skeleton loader ──────────────────────────────────────────────────────────
+export function Skeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`rounded-2xl ${className}`}
+      style={{
+        background: 'linear-gradient(90deg, #f1f5f9 25%, #ede9fe 50%, #f1f5f9 75%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 1.5s infinite',
+      }}
+    />
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+export function EmptyState({
+  icon, title, sub,
+}: { icon: React.ReactNode; title: string; sub?: string; }) {
+  return (
+    <div className="text-center py-14 px-4">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+        style={{ background: 'linear-gradient(135deg, #ede9fe, #e0e7ff)' }}>
+        <span className="text-violet-400">{icon}</span>
+      </div>
+      <p className="font-semibold text-slate-400 text-sm">{title}</p>
+      {sub && <p className="text-slate-300 text-xs mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
 export function Toast({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
@@ -15,7 +70,7 @@ export function Toast({ msg }: { msg: string }) {
   );
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────────────────
 export function Header({
   title, subtitle, onBack, children,
 }: {
@@ -23,10 +78,14 @@ export function Header({
 }) {
   return (
     <div
-      className="bg-indigo-500 text-white sticky top-0 z-50"
-      style={{ boxShadow: '0 4px 24px rgba(99,102,241,0.22)' }}
+      className="text-white sticky top-0 z-50 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(225deg, #6d28d9, #6366f1 55%, #3b82f6)',
+        boxShadow: '0 4px 32px rgba(109,40,217,0.3)',
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+      }}
     >
-      <div className="px-4 pt-4 pb-4">
+      <div className="px-4 pb-10 pt-2">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
@@ -38,12 +97,13 @@ export function Header({
             </button>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-[17px] font-bold tracking-tight leading-tight">{title}</h1>
+            <h1 className="text-[17px] font-bold tracking-tight leading-tight truncate">{title}</h1>
             {subtitle && <p className="text-xs text-white/65 mt-0.5 font-normal">{subtitle}</p>}
           </div>
         </div>
         {children && <div className="mt-3">{children}</div>}
       </div>
+      <WaveBottom />
     </div>
   );
 }
@@ -66,24 +126,38 @@ export function BottomBar({ children }: { children: React.ReactNode }) {
 
 // ─── Button ───────────────────────────────────────────────────────────────────
 export function Btn({
-  bg, fg, children, onClick, className = '', flex = 1,
+  bg, fg, children, onClick, className = '', flex = 1, variant,
 }: {
-  bg: string; fg: string; children: React.ReactNode; onClick?: () => void;
-  className?: string; flex?: number | string;
+  bg?: string; fg?: string; children: React.ReactNode; onClick?: () => void;
+  className?: string; flex?: number | string; variant?: 'primary' | 'secondary' | 'danger';
 }) {
+  let style: React.CSSProperties = { flex, fontFamily: 'inherit' };
+  let cls = `py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
+    transition-all active:scale-[0.97] ${className}`;
+
+  if (variant === 'primary') {
+    cls += ' text-white active:brightness-90 active:shadow-inner';
+    style = {
+      ...style,
+      background: 'linear-gradient(to right, #8b5cf6, #6366f1)',
+      boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
+    };
+  } else if (variant === 'secondary') {
+    cls += ' bg-slate-100 text-slate-600';
+  } else if (variant === 'danger') {
+    cls += ' bg-red-50 text-red-500';
+  } else {
+    style = { ...style, background: bg, color: fg };
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={`py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
-        transition-all active:scale-[0.97] active:opacity-90 ${className}`}
-      style={{ background: bg, color: fg, flex, fontFamily: 'inherit' }}
-    >
+    <button onClick={onClick} className={cls} style={style}>
       {children}
     </button>
   );
 }
 
-// ─── Pill Filter ──────────────────────────────────────────────────────────────
+// ─── Pill ─────────────────────────────────────────────────────────────────────
 export function Pill({
   active, children, onClick,
 }: { active: boolean; children: React.ReactNode; onClick: () => void; }) {
@@ -93,10 +167,13 @@ export function Pill({
       className={`py-1.5 px-4 rounded-full text-xs font-semibold cursor-pointer
         whitespace-nowrap transition-all ${
         active
-          ? 'bg-indigo-500 text-white shadow-sm'
-          : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+          ? 'text-white shadow-sm'
+          : 'text-slate-600 border border-white/60 hover:border-slate-300'
       }`}
-      style={{ fontFamily: 'inherit' }}
+      style={active
+        ? { background: 'linear-gradient(to right, #8b5cf6, #6366f1)', fontFamily: 'inherit' }
+        : { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', fontFamily: 'inherit' }
+      }
     >
       {children}
     </button>
@@ -105,10 +182,10 @@ export function Pill({
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 export const inputClass = `w-full py-3 px-4 border border-slate-200 rounded-xl text-sm
-  outline-none bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
+  outline-none bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100
   transition-all font-[inherit] placeholder:text-slate-400`;
 
-// ─── Tag ─────────────────────────────────────────────────────────────────────
+// ─── Tag ──────────────────────────────────────────────────────────────────────
 export function Tag({
   bg, fg, children,
 }: { bg: string; fg: string; children: React.ReactNode; }) {
@@ -122,7 +199,7 @@ export function Tag({
   );
 }
 
-// ─── BottomSheet ─────────────────────────────────────────────────────────────
+// ─── BottomSheet ──────────────────────────────────────────────────────────────
 export function BottomSheet({
   open, onClose, children,
 }: { open: boolean; onClose: () => void; children: React.ReactNode; }) {
@@ -145,7 +222,7 @@ export function BottomSheet({
   );
 }
 
-// ─── CenterModal ─────────────────────────────────────────────────────────────
+// ─── CenterModal ──────────────────────────────────────────────────────────────
 export function CenterModal({
   open, onClose, children,
 }: { open: boolean; onClose: () => void; children: React.ReactNode; }) {
@@ -167,26 +244,24 @@ export function CenterModal({
   );
 }
 
-// ─── FreqTag ─────────────────────────────────────────────────────────────────
+// ─── FreqTag ──────────────────────────────────────────────────────────────────
 export function FreqTag({ freq }: { freq: 'monthly' | 'occasional'; }) {
   return freq === 'monthly' ? (
     <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5 rounded-full
-      font-semibold bg-indigo-50 text-indigo-500 whitespace-nowrap">
-      <RefreshCw size={9} />
-      חודשי
+      font-semibold bg-violet-50 text-violet-500 whitespace-nowrap">
+      <RefreshCw size={9} />חודשי
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 text-[10px] py-1 px-2.5 rounded-full
       font-semibold bg-amber-50 text-amber-600 whitespace-nowrap">
-      <Calendar size={9} />
-      מדי פעם
+      <Calendar size={9} />מדי פעם
     </span>
   );
 }
 
-// ─── Checkbox ────────────────────────────────────────────────────────────────
+// ─── Checkbox ─────────────────────────────────────────────────────────────────
 export function Checkbox({
-  checked, color = '#6366f1',
+  checked, color = '#7c3aed',
 }: { checked: boolean; color?: string; }) {
   return (
     <div
@@ -198,30 +273,22 @@ export function Checkbox({
     >
       {checked && (
         <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
-          <path
-            d="M1 3.5L4 6.5L10 1"
-            stroke="white" strokeWidth="1.8"
-            strokeLinecap="round" strokeLinejoin="round"
-          />
+          <path d="M1 3.5L4 6.5L10 1" stroke="white" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
     </div>
   );
 }
 
-// ─── Section Divider ─────────────────────────────────────────────────────────
+// ─── Section label ────────────────────────────────────────────────────────────
 export function SectionLabel({
   label, color = '#64748b', dot,
 }: { label: string; color?: string; dot?: string; }) {
   return (
     <div className="flex items-center gap-2 mb-2 mt-4 first:mt-1">
-      <span
-        className="w-2 h-2 rounded-full shrink-0"
-        style={{ background: dot ?? color }}
-      />
-      <span className="text-[12px] font-semibold" style={{ color }}>
-        {label}
-      </span>
+      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: dot ?? color }} />
+      <span className="text-[12px] font-semibold" style={{ color }}>{label}</span>
     </div>
   );
 }
@@ -230,19 +297,16 @@ export function SectionLabel({
 export function Card({
   children, onClick, selected, muted, className = '',
 }: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  selected?: boolean;
-  muted?: boolean;
-  className?: string;
+  children: React.ReactNode; onClick?: () => void;
+  selected?: boolean; muted?: boolean; className?: string;
 }) {
   return (
     <div
       onClick={onClick}
       className={`bg-white rounded-2xl border transition-all mb-2 ${
         selected
-          ? 'border-indigo-400 ring-2 ring-indigo-100'
-          : 'border-slate-100 hover:border-slate-200 hover:shadow-sm'
+          ? 'border-violet-400 ring-2 ring-violet-100'
+          : 'border-slate-100 hover:border-r-4 hover:border-r-violet-200 hover:shadow-sm'
       } ${muted ? 'opacity-55' : ''} ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       {children}
