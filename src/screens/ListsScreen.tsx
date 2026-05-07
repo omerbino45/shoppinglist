@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Trash2, Lock, CheckSquare, X } from 'lucide-react';
+import { Search, Trash2, Lock, X } from 'lucide-react';
 import type { ShoppingList } from '../types';
 import { deleteShoppingList, updateShoppingList } from '../lib/db';
 import { formatDate } from '../lib/utils';
