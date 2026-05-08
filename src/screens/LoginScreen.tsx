@@ -5,7 +5,15 @@ import { getUsers, createUser } from '../lib/db';
 import { Toast, Skeleton } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
-const AVATAR_COLORS = ['#4648d4','#006c49','#825100','#c0392b','#2980b9','#8e44ad','#16a085','#d35400'];
+// Cycles through design-system container colors: primary → secondary → tertiary
+const AVATAR_SLOTS = [
+  { bg: '#6063ee', text: '#fffbff' },
+  { bg: '#6cf8bb', text: '#005236' },
+  { bg: '#a36700', text: '#fffbff' },
+  { bg: '#e1e0ff', text: '#2f2ebe' },
+  { bg: '#4edea3', text: '#002113' },
+  { bg: '#ffddb8', text: '#2a1700' },
+];
 
 interface Props {
   onLogin: (user: User) => void;
@@ -33,92 +41,89 @@ export default function LoginScreen({ onLogin }: Props) {
 
   return (
     <div className="min-h-dvh bg-[#f8f9ff] flex flex-col">
-      {/* Title */}
-      <div className="pt-14 pb-8 text-center px-5">
-        <h1 className="text-[28px] font-bold text-[#0b1c30]">רשימת הקניות שלי</h1>
-        <p className="text-[14px] text-[#464554] mt-1">מי קונה היום?</p>
-      </div>
+      {/* Sticky white header */}
+      <header className="sticky top-0 z-10 bg-white text-center px-5 pt-12 pb-6">
+        <h1 className="text-[28px] font-bold leading-[34px] text-[#4648d4]">רשימת הקניות שלי</h1>
+      </header>
 
-      <div className="max-w-md mx-auto w-full px-5 flex-1">
+      <main className="flex-1 px-5 pb-10 overflow-y-auto">
         {/* User grid */}
-        {loading ? (
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {[0, 1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-[110px]" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {users.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {users.map((u, idx) => {
-                  const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-                  return (
-                    <button
-                      key={u.id}
-                      onClick={() => onLogin(u)}
-                      className="bg-white rounded-2xl border border-[#e5eeff] p-4
-                        flex flex-col items-center gap-2 cursor-pointer border-none
-                        shadow-sm active:scale-[0.97] transition-all"
-                      style={{ fontFamily: 'inherit' }}
-                    >
-                      <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center
-                          text-white text-2xl font-bold"
-                        style={{ background: color }}
-                      >
-                        {u.name[0]}
-                      </div>
-                      <span className="text-[15px] font-bold text-[#0b1c30]">{u.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
+        <div className="grid grid-cols-2 gap-4 mt-8">
+          {loading ? (
+            <>
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-xl p-6 flex flex-col items-center gap-4
+                  border border-[#dce9ff] opacity-70">
+                  <Skeleton className="w-16 h-16 rounded-full" />
+                  <Skeleton className="w-12 h-5 rounded" />
+                </div>
+              ))}
+            </>
+          ) : (
+            users.map((u, idx) => {
+              const slot = AVATAR_SLOTS[idx % AVATAR_SLOTS.length];
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => onLogin(u)}
+                  className="bg-white rounded-xl p-6 flex flex-col items-center justify-center gap-4
+                    border border-[#dce9ff] shadow-sm cursor-pointer
+                    hover:bg-[#eff4ff] active:scale-[0.97] transition-all"
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-[28px] font-bold"
+                    style={{ background: slot.bg, color: slot.text }}
+                  >
+                    {u.name[0]}
+                  </div>
+                  <span className="text-[22px] font-semibold text-[#0b1c30] leading-[28px]">{u.name}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
 
         {/* Divider */}
         {!loading && (
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-[#e5eeff]" />
-            <span className="text-[13px] text-[#c7c4d7] font-medium">או</span>
-            <div className="flex-1 h-px bg-[#e5eeff]" />
+          <div className="flex items-center gap-4 my-12">
+            <div className="flex-1 h-px bg-[#c7c4d7]" />
+            <span className="text-[12px] font-semibold text-[#767586] tracking-[0.02em] px-2">או</span>
+            <div className="flex-1 h-px bg-[#c7c4d7]" />
           </div>
         )}
 
         {/* New user card */}
         {!loading && (
-          <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <UserPlus size={16} className="text-[#4648d4] shrink-0" />
-              <span className="text-[14px] font-bold text-[#0b1c30]">משתמש חדש</span>
+          <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-sm">
+            <h2 className="text-[22px] font-semibold text-[#0b1c30] leading-[28px] mb-6 flex items-center gap-2">
+              <UserPlus size={22} className="text-[#4648d4] shrink-0" />
+              משתמש חדש
+            </h2>
+            <div className="flex flex-col gap-6">
+              <input
+                placeholder="הכנס שם..."
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                className="w-full bg-[#eff4ff] border-none rounded-lg px-4 py-4
+                  text-[18px] text-[#0b1c30] placeholder:text-[#464554]
+                  outline-none focus:ring-2 focus:ring-[#4648d4] focus:bg-white transition-colors"
+                style={{ fontFamily: 'inherit' }}
+              />
+              <button
+                onClick={handleCreate}
+                className="w-full bg-[#4648d4] text-white rounded-full py-4
+                  text-[22px] font-semibold cursor-pointer border-none
+                  active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                style={{ fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(70,72,212,0.35)' }}
+              >
+                הצטרף ←
+              </button>
             </div>
-            <input
-              placeholder="הכנס שם..."
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
-              className="w-full py-3 px-4 border border-[#c7c4d7] rounded-2xl text-sm
-                outline-none bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
-                transition-all font-[inherit] placeholder:text-[#c7c4d7] mb-3 text-right"
-              style={{ fontFamily: 'inherit' }}
-            />
-            <button
-              onClick={handleCreate}
-              className="w-full py-3.5 rounded-full border-none font-bold text-sm
-                text-white cursor-pointer active:scale-[0.98] transition-all"
-              style={{
-                background: '#4648d4',
-                fontFamily: 'inherit',
-                boxShadow: '0 4px 14px rgba(70,72,212,0.3)',
-              }}
-            >
-              ← הצטרף
-            </button>
           </div>
         )}
-      </div>
+      </main>
 
       <Toast msg={message} />
     </div>
