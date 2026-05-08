@@ -20,11 +20,6 @@ interface Props {
 
 interface UndoState { item: ShoppingItem; index: number; }
 
-function progressGradient(pct: number): string {
-  if (pct === 100) return 'linear-gradient(to right, #10b981, #059669)';
-  if (pct >= 80)   return 'linear-gradient(to right, #6366f1, #10b981)';
-  return                  'linear-gradient(to right, #8b5cf6, #6366f1)';
-}
 
 export default function ShopScreen({ list, master, allLists, onUpdate, onListsChange, onBack }: Props) {
   const [filter, setFilter]     = useState<'all' | 'pending' | 'done'>('all');
