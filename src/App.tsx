@@ -61,14 +61,13 @@ export default function App() {
 
   if (screen === 'new') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div className="min-h-dvh bg-[#f8f9ff]">
         <NewListScreen
           userId={user.id}
           master={master}
           onCreated={(list) => { setLists(prev => [list, ...prev]); setScreen('home'); }}
           onBack={() => setScreen('home')}
         />
-        {tabBar}
       </div>
     );
   }
