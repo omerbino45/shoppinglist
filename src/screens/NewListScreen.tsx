@@ -153,9 +153,9 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm
+      <div className="fixed bottom-0 w-full bg-white/95 backdrop-blur-sm
         border-t border-[#e5eeff] py-3 px-4 flex gap-2.5 z-50"
-        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.05)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        style={{ maxWidth: 390, left: '50%', transform: 'translateX(-50%)', boxShadow: '0 -4px 20px rgba(0,0,0,0.05)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <button onClick={onBack}
           className="flex-1 py-3.5 border-none rounded-2xl font-bold text-sm cursor-pointer
             bg-[#f0f4ff] text-[#464554] active:scale-95 transition-all"

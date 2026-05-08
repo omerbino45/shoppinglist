@@ -58,8 +58,8 @@ export function BottomTabBar({ screen, onNavigate }: {
 }) {
   const active = activeTab(screen);
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#e5eeff]"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="fixed bottom-0 z-50 bg-white border-t border-[#e5eeff] w-full"
+      style={{ maxWidth: 390, left: '50%', transform: 'translateX(-50%)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex">
         {TABS.map(tab => {
           const isActive = tab.id === active;
@@ -99,7 +99,7 @@ export function FAB({ onClick }: { onClick: () => void }) {
         flex items-center justify-center text-white active:scale-95 transition-transform"
       style={{
         bottom: '5.5rem',
-        left: '1.25rem',
+        left: 'calc(50% - 195px + 1.25rem)',
         background: '#4648d4',
         boxShadow: '0 4px 16px rgba(70,72,212,0.4)',
         fontFamily: 'inherit',
