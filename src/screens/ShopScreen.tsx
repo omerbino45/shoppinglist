@@ -148,7 +148,7 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
 
           return (
             <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
-              style={{ borderRight: `4px solid ${cat.color}` }}>
+              style={{ borderRight: `4px solid ${cat.color}`, animation: `fadeUp 0.28s ease ${ci * 55}ms both` }}>
               <button onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
                 className="w-full flex items-center gap-3 py-3 px-4 cursor-pointer border-none bg-transparent"
                 style={{ fontFamily: 'inherit' }}>
@@ -164,10 +164,10 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
 
               {!isCol && (
                 <div className="border-t border-[#f0f4ff]">
-                  {filtered.map(item => (
+                  {filtered.map((item, itemIdx) => (
                     <div key={item.idx}
                       className="flex items-center gap-3 py-3 px-4 border-b border-[#f8f9ff] last:border-b-0"
-                      style={{ opacity: item.checked ? 0.5 : 1 }}>
+                      style={{ opacity: item.checked ? 0.5 : 1, animation: `fadeUp 0.22s ease ${itemIdx * 35}ms both` }}>
                       <button onClick={() => toggleItem(item.idx)} className="cursor-pointer shrink-0 border-none bg-transparent active:scale-95 transition-transform">
                         <Checkbox checked={item.checked} />
                       </button>
@@ -209,7 +209,7 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
       {undo && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
           py-3 px-5 rounded-2xl flex items-center gap-3 z-[300] shadow-2xl"
-          style={{ animation: 'fadeUp .25s ease' }}>
+          style={{ animation: 'bounceIn .3s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
           <span className="text-sm">"{undo.item.name}" הוסר</span>
           <button onClick={handleUndo}
             className="border-none py-1.5 px-4 rounded-xl font-bold text-xs cursor-pointer

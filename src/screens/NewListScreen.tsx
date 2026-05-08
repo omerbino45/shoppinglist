@@ -98,7 +98,7 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
 
           return (
             <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
-              style={{ borderRight: `4px solid ${cat.color}` }}>
+              style={{ borderRight: `4px solid ${cat.color}`, animation: `fadeUp 0.28s ease ${ci * 45}ms both` }}>
               <button
                 onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
                 className="w-full flex items-center gap-3 py-3.5 px-4 cursor-pointer border-none bg-transparent
@@ -136,10 +136,11 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
                       נקה
                     </button>
                   </div>
-                  {items.map(item => (
+                  {items.map((item, ii) => (
                     <div key={item.key}
                       onClick={() => setSel(p => ({ ...p, [item.key]: !p[item.key] }))}
-                      className="flex items-center gap-3 py-2.5 px-1.5 rounded-xl cursor-pointer hover:bg-[#f0f4ff] transition-colors">
+                      className="flex items-center gap-3 py-2.5 px-1.5 rounded-xl cursor-pointer hover:bg-[#f0f4ff] transition-colors"
+                      style={{ animation: `fadeUp 0.2s ease ${ii * 30}ms both` }}>
                       <Checkbox checked={item.checked} />
                       <div className="flex-1 text-sm text-[#0b1c30]">{item.name}</div>
                       <FreqTag freq={item.freq} />

@@ -27,7 +27,8 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
         >
           {user.name[0]}
         </div>
-        <h1 className="text-[20px] font-bold text-[#4648d4]">רשימת הקניות שלי</h1>
+        <h1 className="text-[20px] font-bold text-[#4648d4]"
+          style={{ animation: 'bounceIn 0.42s ease both' }}>רשימת הקניות שלי</h1>
         <div className="w-9" />
       </div>
 
@@ -37,10 +38,10 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
           onClick={() => onNavigate('new')}
           className="w-full rounded-2xl border-none cursor-pointer
             flex flex-col items-center justify-center py-8 gap-2
-            active:scale-[0.98] transition-all"
+            active:scale-[0.97] transition-transform"
           style={{
             background: '#4648d4',
-            boxShadow: '0 4px 20px rgba(70,72,212,0.35)',
+            animation: 'fadeUp 0.3s ease 0.05s both, pulseGlow 3s ease-in-out 0.35s infinite',
             fontFamily: 'inherit',
           }}
         >
@@ -53,8 +54,8 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
           onClick={() => onNavigate('lists')}
           className="w-full bg-white rounded-2xl border border-[#e5eeff] cursor-pointer
             flex flex-col items-center justify-center py-7 gap-2
-            shadow-sm active:scale-[0.98] transition-all"
-          style={{ fontFamily: 'inherit' }}
+            shadow-sm active:scale-[0.97] transition-transform"
+          style={{ fontFamily: 'inherit', animation: 'fadeUp 0.3s ease 0.12s both' }}
         >
           <List size={32} color="#4648d4" />
           <span className="text-[16px] font-bold text-[#0b1c30]">הרשימות שלי</span>
@@ -66,8 +67,8 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
           onClick={() => onNavigate('master')}
           className="w-full bg-white rounded-2xl border border-[#e5eeff] cursor-pointer
             flex flex-col items-center justify-center py-7 gap-2
-            shadow-sm active:scale-[0.98] transition-all"
-          style={{ fontFamily: 'inherit' }}
+            shadow-sm active:scale-[0.97] transition-transform"
+          style={{ fontFamily: 'inherit', animation: 'fadeUp 0.3s ease 0.19s both' }}
         >
           <Archive size={32} color="#825100" />
           <span className="text-[16px] font-bold text-[#0b1c30]">רשימת מאסטר</span>
@@ -75,7 +76,7 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
 
         {/* הקניות הקרובות widget */}
         {nextList && (
-          <div className="mt-1">
+          <div className="mt-1" style={{ animation: 'fadeUp 0.3s ease 0.26s both' }}>
             <div className="flex items-center justify-between mb-2.5 px-1">
               <button
                 onClick={() => onNavigate('lists')}

@@ -50,9 +50,11 @@ export default function App() {
 
   const tabBar = <BottomTabBar screen={screen} onNavigate={handleNavigate} />;
 
+  const screenAnim: React.CSSProperties = { animation: 'fadeUp 0.22s ease both' };
+
   if (screen === 'home') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div key="home" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
         <HomeScreen user={user} lists={lists} onNavigate={handleNavigate} />
         {tabBar}
       </div>
@@ -61,7 +63,7 @@ export default function App() {
 
   if (screen === 'new') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff]">
+      <div key="new" className="min-h-dvh bg-[#f8f9ff]" style={screenAnim}>
         <NewListScreen
           userId={user.id}
           master={master}
@@ -74,7 +76,7 @@ export default function App() {
 
   if (screen === 'lists') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div key="lists" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
         <ListsScreen
           lists={lists}
           onUpdate={setLists}
@@ -89,7 +91,7 @@ export default function App() {
     const shopList = lists.find(l => l.id === shopId);
     if (!shopList) { setScreen('lists'); return null; }
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div key={`shop-${shopId}`} className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
         <ShopScreen
           list={shopList}
           master={master}
@@ -105,7 +107,7 @@ export default function App() {
 
   if (screen === 'master') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div key="master" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
         <MasterScreen master={master} onUpdate={setMaster} />
         {tabBar}
       </div>
@@ -114,7 +116,7 @@ export default function App() {
 
   if (screen === 'settings') {
     return (
-      <div className="min-h-dvh bg-[#f8f9ff] pb-20">
+      <div key="settings" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
         <SettingsScreen user={user} onSwitchUser={handleSwitchUser} />
         {tabBar}
       </div>

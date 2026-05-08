@@ -43,7 +43,10 @@ export default function LoginScreen({ onLogin }: Props) {
     <div className="min-h-dvh bg-[#f8f9ff] flex flex-col">
       {/* Sticky white header */}
       <header className="sticky top-0 z-10 bg-white text-center px-5 pt-12 pb-6">
-        <h1 className="text-[28px] font-bold leading-[34px] text-[#4648d4]">רשימת הקניות שלי</h1>
+        <h1 className="text-[28px] font-bold leading-[34px] text-[#4648d4]"
+          style={{ animation: 'bounceIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
+          רשימת הקניות שלי
+        </h1>
       </header>
 
       <main className="flex-1 px-5 pb-10 overflow-y-auto">
@@ -68,8 +71,8 @@ export default function LoginScreen({ onLogin }: Props) {
                   onClick={() => onLogin(u)}
                   className="bg-white rounded-xl p-6 flex flex-col items-center justify-center gap-4
                     border border-[#dce9ff] shadow-sm cursor-pointer
-                    hover:bg-[#eff4ff] active:scale-[0.97] transition-all"
-                  style={{ fontFamily: 'inherit' }}
+                    hover:bg-[#eff4ff] active:scale-[0.97] transition-transform"
+                  style={{ fontFamily: 'inherit', animation: `fadeUp 0.32s ease ${idx * 70}ms both` }}
                 >
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center text-[28px] font-bold"
@@ -95,7 +98,8 @@ export default function LoginScreen({ onLogin }: Props) {
 
         {/* New user card */}
         {!loading && (
-          <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-sm">
+          <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-sm"
+            style={{ animation: 'fadeUp 0.35s ease 0.25s both' }}>
             <h2 className="text-[22px] font-semibold text-[#0b1c30] leading-[28px] mb-6 flex items-center gap-2">
               <UserPlus size={22} className="text-[#4648d4] shrink-0" />
               משתמש חדש
