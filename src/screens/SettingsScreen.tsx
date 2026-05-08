@@ -19,7 +19,8 @@ export default function SettingsScreen({ user, onSwitchUser }: Props) {
 
       <div className="max-w-md mx-auto px-5 py-5">
         {/* Current user card */}
-        <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 flex items-center gap-4 mb-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 flex items-center gap-4 mb-6 shadow-sm"
+          style={{ animation: 'fadeUp 0.32s ease 0.05s both' }}>
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold shrink-0"
             style={{ background: avatarColor }}
@@ -36,12 +37,13 @@ export default function SettingsScreen({ user, onSwitchUser }: Props) {
         <button
           onClick={onSwitchUser}
           className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-none
-            font-bold text-sm cursor-pointer active:scale-[0.98] transition-all"
+            font-bold text-sm cursor-pointer active:scale-[0.97] transition-transform"
           style={{
             background: '#4648d4',
             color: '#ffffff',
             fontFamily: 'inherit',
             boxShadow: '0 4px 14px rgba(70,72,212,0.3)',
+            animation: 'fadeUp 0.32s ease 0.15s both',
           }}
         >
           <LogOut size={18} />

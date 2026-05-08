@@ -8,7 +8,7 @@ export function Toast({ msg }: { msg: string }) {
   return (
     <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
       px-6 py-3 rounded-2xl text-sm font-semibold z-[999] shadow-2xl whitespace-nowrap"
-      style={{ animation: 'fadeUp .25s ease' }}>
+      style={{ animation: 'bounceIn .3s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
       {msg}
     </div>
   );
@@ -68,16 +68,17 @@ export function BottomTabBar({ screen, onNavigate }: {
               key={tab.id}
               onClick={() => onNavigate(tab.id)}
               className="flex-1 flex flex-col items-center justify-center py-2 gap-0
-                border-none bg-transparent cursor-pointer active:scale-95 transition-all"
+                border-none bg-transparent cursor-pointer active:scale-90 transition-all"
               style={{ fontFamily: 'inherit' }}
             >
               {isActive ? (
-                <div className="flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-full bg-[#e1e0ff] text-[#4648d4]">
+                <div className="flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-full bg-[#e1e0ff] text-[#4648d4]"
+                  style={{ animation: 'tabPop 0.22s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
                   {tab.icon}
                   <span className="text-[11px] font-bold">{tab.label}</span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-0.5 py-1.5 text-[#464554]">
+                <div className="flex flex-col items-center gap-0.5 py-1.5 text-[#464554] transition-colors">
                   {tab.icon}
                   <span className="text-[11px] font-semibold">{tab.label}</span>
                 </div>
@@ -96,16 +97,23 @@ export function FAB({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       className="fixed z-40 w-14 h-14 rounded-full border-none cursor-pointer
-        flex items-center justify-center text-white active:scale-95 transition-transform"
+        flex items-center justify-center text-white active:scale-90 transition-transform"
       style={{
         bottom: '5.5rem',
         left: 'calc(50% - 195px + 1.25rem)',
         background: '#4648d4',
-        boxShadow: '0 4px 16px rgba(70,72,212,0.4)',
+        animation: 'pulseGlow 2.8s ease-in-out infinite',
         fontFamily: 'inherit',
       }}
     >
-      <Plus size={26} />
+      {/* Ping ring */}
+      <span style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        background: '#4648d4',
+        animation: 'pingOnce 2.8s ease-out infinite',
+        pointerEvents: 'none',
+      }} />
+      <Plus size={26} style={{ position: 'relative', zIndex: 1 }} />
     </button>
   );
 }
@@ -129,9 +137,10 @@ export function EmptyState({ icon, title, sub }: {
   icon: React.ReactNode; title: string; sub?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-14 text-center">
+    <div className="flex flex-col items-center justify-center py-14 text-center"
+      style={{ animation: 'fadeUp 0.35s ease both' }}>
       <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 text-[#4648d4]"
-        style={{ background: 'linear-gradient(135deg, #e1e0ff, #eff4ff)' }}>
+        style={{ background: 'linear-gradient(135deg, #e1e0ff, #eff4ff)', animation: 'bounceIn 0.45s ease both' }}>
         {icon}
       </div>
       <p className="text-[#464554] font-semibold text-sm">{title}</p>
@@ -196,14 +205,17 @@ export function FreqTag({ freq }: { freq: 'monthly' | 'occasional' }) {
 export function Checkbox({ checked }: { checked: boolean }) {
   return (
     <div
-      className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 transition-all"
+      className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0"
       style={{
         border:     checked ? 'none' : '2px solid #c7c4d7',
         background: checked ? '#006c49' : '#ffffff',
+        transition: 'background 0.18s ease, border 0.18s ease, transform 0.15s ease',
+        transform:  checked ? 'scale(1.08)' : 'scale(1)',
       }}
     >
       {checked && (
-        <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+        <svg width="13" height="10" viewBox="0 0 13 10" fill="none"
+          style={{ animation: 'popIn 0.22s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
           <path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" strokeWidth="2.2"
             strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -249,12 +261,13 @@ export function BottomSheet({ open, onClose, children }: {
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 z-[200] flex items-end justify-center"
+      style={{ animation: 'fadeIn .2s ease both' }}
       onClick={onClose}>
       <div
         className="bg-white rounded-t-[24px] w-full max-w-[500px]"
         style={{
           padding: '24px 24px max(24px, env(safe-area-inset-bottom))',
-          animation: 'slideUp .28s cubic-bezier(0.32,0.72,0,1)',
+          animation: 'slideUp .3s cubic-bezier(0.32,0.72,0,1)',
         }}
         onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-[#e5eeff] rounded-full mx-auto mb-5" />
@@ -271,9 +284,10 @@ export function CenterModal({ open, onClose, children }: {
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 z-[200] flex items-center justify-center p-5"
+      style={{ animation: 'fadeIn .2s ease both' }}
       onClick={onClose}>
       <div className="bg-white rounded-[24px] p-6 w-full max-w-[420px] shadow-xl"
-        style={{ animation: 'scaleIn .2s ease' }}
+        style={{ animation: 'scaleIn .22s cubic-bezier(0.175,0.885,0.32,1.275)' }}
         onClick={e => e.stopPropagation()}>
         {children}
       </div>

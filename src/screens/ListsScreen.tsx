@@ -89,7 +89,7 @@ export default function ListsScreen({ lists, onUpdate, onOpenList }: Props) {
             title={tab === 'open' ? 'אין רשימות פתוחות' : 'אין רשימות סגורות'}
             sub={tab === 'open' ? 'צור רשימה חדשה מהתפריט הראשי' : undefined}
           />
-        ) : shown.map(list => {
+        ) : shown.map((list, idx) => {
           const done     = list.items.filter(i => i.checked).length;
           const catCount = uniqueCatCount(list);
           const isClosed = list.closed;
@@ -99,7 +99,7 @@ export default function ListsScreen({ lists, onUpdate, onOpenList }: Props) {
             <div
               key={list.id}
               className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
-              style={{ borderRight: `4px solid ${accentColor}` }}
+              style={{ borderRight: `4px solid ${accentColor}`, animation: `fadeUp 0.28s ease ${idx * 50}ms both` }}
             >
               {/* Main row */}
               <div

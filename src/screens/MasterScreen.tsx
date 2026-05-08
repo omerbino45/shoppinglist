@@ -154,7 +154,7 @@ export default function MasterScreen({ master, onUpdate }: Props) {
               const isCol = collapsed[ci] !== false;
               return (
                 <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
-                  style={{ borderRight: `4px solid ${cat.color}` }}>
+                  style={{ borderRight: `4px solid ${cat.color}`, animation: `fadeUp 0.28s ease ${ci * 45}ms both` }}>
                   <div className="flex items-center gap-2.5 py-3.5 px-4 cursor-pointer select-none"
                     onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
