@@ -50,14 +50,19 @@ export default function App() {
 
   const tabBar = <BottomTabBar screen={screen} onNavigate={handleNavigate} />;
 
+  // Wrap only the screen content — never the tab bar — in the animated div.
+  // A CSS transform on a parent breaks position:fixed children (they get
+  // positioned relative to the transformed ancestor instead of the viewport).
   const screenAnim: React.CSSProperties = { animation: 'fadeUp 0.22s ease both' };
 
   if (screen === 'home') {
     return (
-      <div key="home" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
-        <HomeScreen user={user} lists={lists} onNavigate={handleNavigate} />
+      <>
+        <div key="home" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
+          <HomeScreen user={user} lists={lists} onNavigate={handleNavigate} />
+        </div>
         {tabBar}
-      </div>
+      </>
     );
   }
 
@@ -76,14 +81,16 @@ export default function App() {
 
   if (screen === 'lists') {
     return (
-      <div key="lists" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
-        <ListsScreen
-          lists={lists}
-          onUpdate={setLists}
-          onOpenList={(id) => { setShopId(id); setScreen('shop'); }}
-        />
+      <>
+        <div key="lists" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
+          <ListsScreen
+            lists={lists}
+            onUpdate={setLists}
+            onOpenList={(id) => { setShopId(id); setScreen('shop'); }}
+          />
+        </div>
         {tabBar}
-      </div>
+      </>
     );
   }
 
@@ -91,35 +98,41 @@ export default function App() {
     const shopList = lists.find(l => l.id === shopId);
     if (!shopList) { setScreen('lists'); return null; }
     return (
-      <div key={`shop-${shopId}`} className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
-        <ShopScreen
-          list={shopList}
-          master={master}
-          allLists={lists}
-          onUpdate={(updated) => setLists(prev => prev.map(l => l.id === updated.id ? updated : l))}
-          onListsChange={setLists}
-          onBack={() => setScreen('lists')}
-        />
+      <>
+        <div key={`shop-${shopId}`} className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
+          <ShopScreen
+            list={shopList}
+            master={master}
+            allLists={lists}
+            onUpdate={(updated) => setLists(prev => prev.map(l => l.id === updated.id ? updated : l))}
+            onListsChange={setLists}
+            onBack={() => setScreen('lists')}
+          />
+        </div>
         {tabBar}
-      </div>
+      </>
     );
   }
 
   if (screen === 'master') {
     return (
-      <div key="master" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
-        <MasterScreen master={master} onUpdate={setMaster} />
+      <>
+        <div key="master" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
+          <MasterScreen master={master} onUpdate={setMaster} />
+        </div>
         {tabBar}
-      </div>
+      </>
     );
   }
 
   if (screen === 'settings') {
     return (
-      <div key="settings" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
-        <SettingsScreen user={user} onSwitchUser={handleSwitchUser} />
+      <>
+        <div key="settings" className="min-h-dvh bg-[#f8f9ff] pb-20" style={screenAnim}>
+          <SettingsScreen user={user} onSwitchUser={handleSwitchUser} />
+        </div>
         {tabBar}
-      </div>
+      </>
     );
   }
 
