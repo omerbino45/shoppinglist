@@ -30,7 +30,7 @@ export function Header({ title, subtitle, onBack, children }: {
           </button>
         )}
         <div className="flex-1 text-right">
-          <h1 className="text-[22px] font-bold text-[#0b1c30] leading-tight">{title}</h1>
+          <h1 className="text-[22px] font-bold text-[#4648d4] leading-tight">{title}</h1>
           {subtitle && <p className="text-[13px] text-[#464554] mt-0.5">{subtitle}</p>}
         </div>
       </div>
@@ -67,19 +67,21 @@ export function BottomTabBar({ screen, onNavigate }: {
             <button
               key={tab.id}
               onClick={() => onNavigate(tab.id)}
-              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5
+              className="flex-1 flex flex-col items-center justify-center py-2 gap-0
                 border-none bg-transparent cursor-pointer active:scale-95 transition-all"
               style={{ fontFamily: 'inherit' }}
             >
-              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                isActive ? 'bg-[#e1e0ff]' : ''
-              }`} style={{ color: isActive ? '#4648d4' : '#464554' }}>
-                {tab.icon}
-              </div>
-              <span className="text-[11px] font-semibold"
-                style={{ color: isActive ? '#4648d4' : '#464554' }}>
-                {tab.label}
-              </span>
+              {isActive ? (
+                <div className="flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-full bg-[#e1e0ff] text-[#4648d4]">
+                  {tab.icon}
+                  <span className="text-[11px] font-bold">{tab.label}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-0.5 py-1.5 text-[#464554]">
+                  {tab.icon}
+                  <span className="text-[11px] font-semibold">{tab.label}</span>
+                </div>
+              )}
             </button>
           );
         })}

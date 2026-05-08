@@ -27,7 +27,7 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
         >
           {user.name[0]}
         </div>
-        <h1 className="text-[20px] font-bold text-[#0b1c30]">רשימת הקניות שלי</h1>
+        <h1 className="text-[20px] font-bold text-[#4648d4]">רשימת הקניות שלי</h1>
         <div className="w-9" />
       </div>
 
