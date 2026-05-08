@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
+import { Settings2, Search, Copy, RotateCcw, Lock, LockOpen, Undo2, Plus, ChevronDown, ChevronUp, MoreVertical, Trash2 } from 'lucide-react';
 import type { ShoppingList, ShoppingItem, MasterCategory } from '../types';
 import { saveShoppingList, generateListId, generateVisibleId } from '../lib/db';
 import { formatDate, copyListToWhatsApp } from '../lib/utils';
-import { Header, Pill, Checkbox, BottomSheet, CenterModal, Toast, inputClass } from '../components/ui';
+import { Header, Pill, Checkbox, BottomSheet, CenterModal, Toast, FAB, inputClass } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
 interface Props {
@@ -14,31 +15,27 @@ interface Props {
   onBack: () => void;
 }
 
-interface UndoState {
-  item: ShoppingItem;
-  index: number;
-}
+interface UndoState { item: ShoppingItem; index: number; }
 
 export default function ShopScreen({ list, master, allLists, onUpdate, onListsChange, onBack }: Props) {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
-  const [search, setSearch] = useState('');
+  const [filter, setFilter]     = useState<'all' | 'pending' | 'done'>('all');
+  const [search, setSearch]     = useState('');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
-  const [dupOpen, setDupOpen] = useState(false);
-  const [dupDate, setDupDate] = useState('');
-  const [addOpen, setAddOpen] = useState(false);
+  const [dupOpen, setDupOpen]   = useState(false);
+  const [dupDate, setDupDate]   = useState('');
+  const [addOpen, setAddOpen]   = useState(false);
   const [addSearch, setAddSearch] = useState('');
-  const [undo, setUndo] = useState<UndoState | null>(null);
-  const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { message, fire } = useToast();
+  const [undo, setUndo]         = useState<UndoState | null>(null);
+  const [itemMenuIdx, setItemMenuIdx] = useState<number | null>(null);
+  const undoTimer               = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { message, fire }       = useToast();
 
   const total = list.items.length;
-  const done = list.items.filter(i => i.checked).length;
+  const done  = list.items.filter(i => i.checked).length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
 
-  function save(updated: ShoppingList) {
-    onUpdate(updated);
-    saveShoppingList(updated);
-  }
+  function save(updated: ShoppingList) { onUpdate(updated); saveShoppingList(updated); }
 
   function toggleItem(idx: number) {
     const items = [...list.items];
@@ -48,10 +45,8 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
 
   function removeItem(idx: number) {
     const removed = list.items[idx];
-    const items = list.items.filter((_, i) => i !== idx);
-    save({ ...list, items });
-
-    // Undo
+    save({ ...list, items: list.items.filter((_, i) => i !== idx) });
+    setItemMenuIdx(null);
     setUndo({ item: removed, index: idx });
     if (undoTimer.current) clearTimeout(undoTimer.current);
     undoTimer.current = setTimeout(() => setUndo(null), 5000);
@@ -63,69 +58,38 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
     items.splice(undo.index, 0, undo.item);
     save({ ...list, items });
     setUndo(null);
-    if (undoTimer.current) clearTimeout(undoTimer.current);
+    clearTimeout(undoTimer.current);
     fire('הפריט הוחזר!');
   }
 
   function addItemFromMaster(item: { name: string; freq: 'monthly' | 'occasional' }, cat: MasterCategory) {
-    const exists = list.items.find(i => i.name === item.name && i.category === cat.name);
-    if (exists) { fire('הפריט כבר ברשימה'); return; }
-    const newItem: ShoppingItem = {
-      name: item.name, freq: item.freq,
-      category: cat.name, catIcon: cat.icon, catColor: cat.color,
-      checked: false
-    };
-    save({ ...list, items: [...list.items, newItem] });
+    if (list.items.find(i => i.name === item.name && i.category === cat.name)) { fire('הפריט כבר ברשימה'); return; }
+    save({ ...list, items: [...list.items, { name: item.name, freq: item.freq, category: cat.name, catIcon: cat.icon, catColor: cat.color, checked: false }] });
     fire(`${item.name} נוסף!`);
   }
 
   async function handleCopy() {
-    try {
-      await copyListToWhatsApp(list);
-      fire('הועתק! 📋');
-    } catch {
-      fire('שגיאה בהעתקה');
-    }
+    try { await copyListToWhatsApp(list); fire('הועתק!'); } catch { fire('שגיאה בהעתקה'); }
     setEditOpen(false);
   }
 
   async function handleDuplicate() {
     const newList: ShoppingList = {
-      id: generateListId(),
-      visibleId: generateVisibleId(),
-      userId: list.userId,
+      id: generateListId(), visibleId: generateVisibleId(), userId: list.userId,
       date: dupDate || new Date().toISOString().split('T')[0],
-      store: list.store,
-      items: list.items.map(i => ({ ...i, checked: false })),
-      closed: false,
-      createdAt: new Date().toISOString()
+      store: list.store, items: list.items.map(i => ({ ...i, checked: false })),
+      closed: false, createdAt: new Date().toISOString(),
     };
     await saveShoppingList(newList);
     onListsChange([...allLists, newList]);
-    setDupOpen(false);
-    setDupDate('');
+    setDupOpen(false); setDupDate('');
     fire(`רשימה ${newList.visibleId} שוכפלה!`);
   }
 
-  function handleReset() {
-    save({ ...list, items: list.items.map(i => ({ ...i, checked: false })) });
-    setEditOpen(false);
-    fire('הרשימה אופסה');
-  }
+  function handleReset()  { save({ ...list, items: list.items.map(i => ({ ...i, checked: false })) }); setEditOpen(false); fire('הרשימה אופסה'); }
+  function handleClose()  { save({ ...list, closed: true });  setEditOpen(false); fire('הרשימה נסגרה'); }
+  function handleReopen() { save({ ...list, closed: false }); setEditOpen(false); fire('הרשימה נפתחה'); }
 
-  function handleClose() {
-    save({ ...list, closed: true });
-    setEditOpen(false);
-    fire('הרשימה נסגרה ✅');
-  }
-
-  function handleReopen() {
-    save({ ...list, closed: false });
-    setEditOpen(false);
-    fire('הרשימה נפתחה');
-  }
-
-  // Group items by category
   const grouped: Record<string, { icon: string; color: string; name: string; items: (ShoppingItem & { idx: number })[] }> = {};
   list.items.forEach((item, idx) => {
     if (!grouped[item.category]) grouped[item.category] = { icon: item.catIcon, color: item.catColor, name: item.category, items: [] };
@@ -134,41 +98,43 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
   const cats = Object.values(grouped);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-12">
-      <Header
-        title={`${list.visibleId}`}
-        subtitle={`${formatDate(list.date)} · ${list.store} ${list.closed ? '🔒' : ''}`}
-        onBack={onBack}
-      >
-        <div className="flex justify-center gap-3.5 mt-2 text-xs font-medium">
-          <div className="bg-white/10 py-1 px-3.5 rounded-2xl">
-            נשאר: <span className="font-bold text-[#ffd166]">{total - done}</span>
+    <div className="bg-[#f8f9ff]">
+      <Header title={list.visibleId} subtitle={`${formatDate(list.date)} · ${list.store}${list.closed ? ' · סגורה' : ''}`} onBack={onBack}>
+        {/* Progress */}
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-[#0b1c30] text-[13px] font-bold whitespace-nowrap">התקדמות קנייה</span>
+          <div className="flex-1 h-2.5 bg-[#e5eeff] rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${pct}%`, background: 'linear-gradient(to left, #4648d4, #6cf8bb)' }} />
           </div>
-          <div className="bg-white/10 py-1 px-3.5 rounded-2xl">
-            נלקח: <span className="font-bold text-[#a7f3d0]">{done}</span>
-          </div>
+          <span className="text-[#0b1c30] text-[13px] font-bold whitespace-nowrap">{done}/{total}</span>
         </div>
       </Header>
 
       {/* Filters */}
-      <div className="sticky top-[102px] z-40 bg-[#faf8f5] border-b border-[#e8e4df] px-4 py-2">
-        <input placeholder="🔍 חיפוש..." value={search}
-          onChange={e => setSearch(e.target.value)}
-          className={inputClass + ' mb-1.5'} />
-        <div className="flex gap-1.5 flex-wrap">
+      <div className="sticky top-[97px] z-40 bg-[#f8f9ff] border-b border-[#e5eeff] px-4 py-2.5">
+        <div className="relative mb-2">
+          <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#c7c4d7]" />
+          <input placeholder="חיפוש..." value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-sm
+              outline-none bg-[#eff4ff] focus:border-[#4648d4] transition-all font-[inherit] placeholder:text-[#c7c4d7]" />
+        </div>
+        <div className="flex gap-1.5 items-center flex-wrap">
           {(['all', 'pending', 'done'] as const).map(f => {
-            const label = f === 'all' ? `הכל (${total})` : f === 'pending' ? `טרם נלקח (${total - done})` : `נלקח (${done})`;
-            return <Pill key={f} active={filter === f} onClick={() => setFilter(f)}>{label}</Pill>;
+            const labels = { all: `הכל (${total})`, pending: `נותר (${total - done})`, done: `בוצע (${done})` };
+            return <Pill key={f} active={filter === f} onClick={() => setFilter(f)}>{labels[f]}</Pill>;
           })}
-          <div className="mr-auto flex gap-1.5">
-            <Pill active={false} onClick={() => setEditOpen(true)}>⚙️</Pill>
-            <Pill active={false} onClick={() => { setAddSearch(''); setAddOpen(true); }}>+ פריט</Pill>
-          </div>
+          <button onClick={() => setEditOpen(true)}
+            className="mr-auto w-8 h-8 rounded-full bg-white border border-[#c7c4d7]
+              flex items-center justify-center cursor-pointer text-[#464554]
+              hover:border-[#4648d4] active:scale-95 transition-all">
+            <Settings2 size={15} />
+          </button>
         </div>
       </div>
 
       {/* Items */}
-      <div className="max-w-lg mx-auto px-4 py-2">
+      <div className="max-w-lg mx-auto px-4 pt-3 pb-28 flex flex-col gap-2">
         {cats.map((cat, ci) => {
           const filtered = cat.items.filter(i => {
             const ms = !search || i.name.includes(search);
@@ -176,42 +142,47 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
             return ms && mf;
           });
           if (!filtered.length) return null;
-          const cd = filtered.filter(i => i.checked).length;
-          const ad = cd === filtered.length;
+          const cd    = filtered.filter(i => i.checked).length;
+          const allDone = cd === filtered.length;
           const isCol = collapsed[ci] !== false;
 
           return (
-            <div key={ci} className="mb-2.5 rounded-[14px] overflow-hidden bg-white shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-              <div onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
-                className="flex items-center gap-2.5 py-3 px-4 cursor-pointer select-none">
-                <div className="w-9 h-9 rounded-[10px] flex items-center justify-center text-xl shrink-0"
-                  style={{ background: cat.color + '15', color: cat.color }}>{cat.icon}</div>
-                <div className="flex-1 font-bold text-[15px]" style={{ color: cat.color }}>{cat.name}</div>
-                <div className="text-[11px] py-0.5 px-2.5 rounded-full font-semibold"
-                  style={{
-                    background: ad ? '#d8f3dc' : cat.color + '15',
-                    color: ad ? '#2d6a4f' : cat.color
-                  }}>{cd}/{filtered.length}</div>
-                <span className="text-xs text-gray-400 transition-transform"
-                  style={{ transform: isCol ? 'rotate(90deg)' : 'none' }}>◀</span>
-              </div>
+            <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
+              style={{ borderRight: `4px solid ${cat.color}` }}>
+              <button onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
+                className="w-full flex items-center gap-3 py-3 px-4 cursor-pointer border-none bg-transparent"
+                style={{ fontFamily: 'inherit' }}>
+                <span className="text-xl shrink-0">{cat.icon}</span>
+                <div className="flex-1 font-bold text-[15px] text-right" style={{ color: cat.color }}>{cat.name}</div>
+                <span className="text-[11px] py-0.5 px-2.5 rounded-full font-semibold"
+                  style={{ background: allDone ? '#e6f4ea' : '#e5eeff', color: allDone ? '#006c49' : '#4648d4' }}>
+                  {cd}/{filtered.length}
+                </span>
+                {isCol ? <ChevronDown size={16} className="text-[#c7c4d7] shrink-0" />
+                       : <ChevronUp   size={16} className="text-[#c7c4d7] shrink-0" />}
+              </button>
+
               {!isCol && (
-                <div className="px-2.5 pb-2.5">
+                <div className="border-t border-[#f0f4ff]">
                   {filtered.map(item => (
                     <div key={item.idx}
-                      className="flex items-center gap-3 py-2.5 px-2 rounded-[10px] transition-all"
-                      style={{ opacity: item.checked ? 0.4 : 1 }}>
-                      <div onClick={() => toggleItem(item.idx)} className="cursor-pointer">
+                      className="flex items-center gap-3 py-3 px-4 border-b border-[#f8f9ff] last:border-b-0"
+                      style={{ opacity: item.checked ? 0.5 : 1 }}>
+                      <button onClick={() => toggleItem(item.idx)} className="cursor-pointer shrink-0 border-none bg-transparent active:scale-95 transition-transform">
                         <Checkbox checked={item.checked} />
-                      </div>
-                      <div onClick={() => toggleItem(item.idx)}
-                        className="flex-1 text-sm cursor-pointer"
-                        style={{ textDecoration: item.checked ? 'line-through' : 'none' }}>
+                      </button>
+                      <span onClick={() => toggleItem(item.idx)}
+                        className="flex-1 text-[18px] font-medium text-[#0b1c30] cursor-pointer select-none text-right"
+                        style={{ textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? '#464554' : '#0b1c30' }}>
                         {item.name}
-                      </div>
-                      <button onClick={() => removeItem(item.idx)}
-                        className="border-none bg-transparent text-gray-300 text-base cursor-pointer px-1.5
-                          hover:text-red-400 transition-colors">✕</button>
+                      </span>
+                      <span className="text-lg shrink-0">{item.catIcon}</span>
+                      {/* 3-dot menu */}
+                      <button onClick={() => setItemMenuIdx(item.idx)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border-none
+                          bg-transparent text-[#c7c4d7] cursor-pointer hover:bg-[#f0f4ff] hover:text-[#464554] transition-all shrink-0">
+                        <MoreVertical size={14} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -219,98 +190,140 @@ export default function ShopScreen({ list, master, allLists, onUpdate, onListsCh
             </div>
           );
         })}
+
+        {cats.length === 0 && (
+          <div className="text-center py-14">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ background: 'linear-gradient(135deg, #e1e0ff, #eff4ff)' }}>
+              <Search size={24} className="text-[#4648d4]" />
+            </div>
+            <p className="text-[#464554] text-sm font-medium">{search ? 'לא נמצאו פריטים' : 'הרשימה ריקה'}</p>
+          </div>
+        )}
       </div>
+
+      {/* FAB */}
+      <FAB onClick={() => { setAddSearch(''); setAddOpen(true); }} />
 
       {/* Undo bar */}
       {undo && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
           py-3 px-5 rounded-2xl flex items-center gap-3 z-[300] shadow-2xl"
-          style={{ animation: 'fadeUp .3s ease' }}>
-          <span className="text-sm">הפריט "{undo.item.name}" הוסר</span>
+          style={{ animation: 'fadeUp .25s ease' }}>
+          <span className="text-sm">"{undo.item.name}" הוסר</span>
           <button onClick={handleUndo}
-            className="bg-[#ffd166] text-[#1a1a2e] border-none py-1.5 px-4 rounded-xl
-              font-bold text-xs cursor-pointer"
-            style={{ fontFamily: 'inherit' }}>
-            בטל
+            className="border-none py-1.5 px-4 rounded-xl font-bold text-xs cursor-pointer
+              flex items-center gap-1.5 active:scale-95 transition-all text-white"
+            style={{ background: '#4648d4', fontFamily: 'inherit' }}>
+            <Undo2 size={12} /> בטל
           </button>
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Item delete confirmation */}
+      <BottomSheet open={itemMenuIdx !== null} onClose={() => setItemMenuIdx(null)}>
+        {itemMenuIdx !== null && (
+          <>
+            <p className="text-center font-bold text-[16px] text-[#0b1c30] mb-5">
+              {list.items[itemMenuIdx]?.name}
+            </p>
+            <button onClick={() => removeItem(itemMenuIdx!)}
+              className="w-full py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                flex items-center justify-center gap-2 bg-[#fdecea] text-[#ba1a1a]
+                active:scale-[0.98] transition-all mb-2.5"
+              style={{ fontFamily: 'inherit' }}>
+              <Trash2 size={16} /> מחק מהרשימה
+            </button>
+            <button onClick={() => setItemMenuIdx(null)}
+              className="w-full py-3 rounded-2xl border-none font-semibold text-sm cursor-pointer
+                bg-[#f0f4ff] text-[#464554] active:scale-[0.98] transition-all"
+              style={{ fontFamily: 'inherit' }}>
+              ביטול
+            </button>
+          </>
+        )}
+      </BottomSheet>
+
+      {/* Settings sheet */}
       <BottomSheet open={editOpen} onClose={() => setEditOpen(false)}>
-        <div className="font-bold text-lg mb-4 text-center">⚙️ עריכת רשימה</div>
-        <label className="text-xs font-semibold text-gray-500 block mb-1">📅 תאריך</label>
-        <input type="date" value={list.date}
-          onChange={e => save({ ...list, date: e.target.value })}
-          className={inputClass + ' mb-3'} />
-        <div className="flex flex-col gap-2">
+        <h2 className="font-bold text-[16px] text-[#0b1c30] text-center mb-5">הגדרות רשימה</h2>
+        <label className="text-[12px] font-semibold text-[#464554] block mb-1.5">תאריך</label>
+        <input type="date" value={list.date} onChange={e => save({ ...list, date: e.target.value })}
+          className={inputClass + ' mb-5'} />
+        <div className="flex flex-col gap-2.5">
           <button onClick={handleCopy}
-            className="py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#e3f2fd] text-[#0077b6]"
-            style={{ fontFamily: 'inherit' }}>📋 העתק לוואצאפ</button>
+            className="py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+              flex items-center justify-center gap-2 bg-[#eff4ff] text-[#0b1c30] active:scale-[0.98]"
+            style={{ fontFamily: 'inherit' }}><Copy size={16} /> העתק לוואצאפ</button>
           <button onClick={handleReset}
-            className="py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#fff3e0] text-[#e65100]"
-            style={{ fontFamily: 'inherit' }}>🔄 איפוס סימונים</button>
+            className="py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+              flex items-center justify-center gap-2 bg-[#fff8e1] text-[#825100] active:scale-[0.98]"
+            style={{ fontFamily: 'inherit' }}><RotateCcw size={16} /> איפוס סימונים</button>
           <button onClick={() => { setDupDate(''); setDupOpen(true); setEditOpen(false); }}
-            className="py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#e8f5e9] text-[#2e7d32]"
-            style={{ fontFamily: 'inherit' }}>📑 שכפל רשימה</button>
-          {!list.closed ? (
-            <button onClick={handleClose}
-              className="py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#ffeaea] text-[#d32f2f]"
-              style={{ fontFamily: 'inherit' }}>🔒 סגור רשימה</button>
-          ) : (
-            <button onClick={handleReopen}
-              className="py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#d8f3dc] text-[#2d6a4f]"
-              style={{ fontFamily: 'inherit' }}>🔓 פתח מחדש</button>
-          )}
+            className="py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer text-white
+              flex items-center justify-center gap-2 active:scale-[0.98]"
+            style={{ background: '#4648d4', fontFamily: 'inherit' }}><Copy size={16} /> שכפל רשימה</button>
+          {!list.closed
+            ? <button onClick={handleClose}
+                className="py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                  flex items-center justify-center gap-2 bg-[#fdecea] text-[#ba1a1a] active:scale-[0.98]"
+                style={{ fontFamily: 'inherit' }}><Lock size={16} /> סגור רשימה</button>
+            : <button onClick={handleReopen}
+                className="py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                  flex items-center justify-center gap-2 bg-[#e6f4ea] text-[#006c49] active:scale-[0.98]"
+                style={{ fontFamily: 'inherit' }}><LockOpen size={16} /> פתח מחדש</button>
+          }
         </div>
         <button onClick={() => setEditOpen(false)}
-          className="mt-3 w-full py-3 border-none rounded-xl bg-gray-100 text-gray-400
-            font-semibold text-sm cursor-pointer"
+          className="mt-3 w-full py-3 border-none rounded-2xl bg-[#f0f4ff] text-[#464554]
+            font-semibold text-sm cursor-pointer active:scale-[0.98]"
           style={{ fontFamily: 'inherit' }}>סגור</button>
       </BottomSheet>
 
       {/* Duplicate Modal */}
       <CenterModal open={dupOpen} onClose={() => setDupOpen(false)}>
-        <div className="font-bold text-base mb-3.5 text-center">📑 שכפול רשימה</div>
-        <label className="text-xs font-semibold text-gray-500">תאריך לרשימה החדשה</label>
+        <h2 className="font-bold text-[16px] text-[#0b1c30] text-center mb-4">שכפול רשימה</h2>
+        <label className="text-[12px] font-semibold text-[#464554] block mb-1.5">תאריך לרשימה החדשה</label>
         <input type="date" value={dupDate} onChange={e => setDupDate(e.target.value)}
-          className={inputClass + ' mt-1 mb-3.5'} />
-        <div className="flex gap-2">
+          className={inputClass + ' mb-4'} />
+        <div className="flex gap-2.5">
           <button onClick={() => setDupOpen(false)}
-            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-gray-100 text-gray-400"
+            className="flex-1 py-3.5 border-none rounded-2xl font-bold text-sm cursor-pointer bg-[#f0f4ff] text-[#464554]"
             style={{ fontFamily: 'inherit' }}>ביטול</button>
           <button onClick={handleDuplicate}
-            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#e63946] text-white"
-            style={{ fontFamily: 'inherit' }}>שכפל ✨</button>
+            className="flex-1 py-3.5 border-none rounded-2xl font-bold text-sm cursor-pointer text-white"
+            style={{ background: '#4648d4', fontFamily: 'inherit' }}>שכפל</button>
         </div>
       </CenterModal>
 
-      {/* Add Item Modal */}
+      {/* Add Item Sheet */}
       <BottomSheet open={addOpen} onClose={() => setAddOpen(false)}>
-        <div className="font-bold text-base mb-3 text-center">➕ הוסף פריט מהמאסטר</div>
-        <input placeholder="🔍 חיפוש..." value={addSearch}
-          onChange={e => setAddSearch(e.target.value)}
-          className={inputClass + ' mb-3'} />
-        <div className="max-h-[50vh] overflow-auto">
+        <h2 className="font-bold text-[16px] text-[#0b1c30] text-center mb-4">הוסף פריט מהמאסטר</h2>
+        <div className="relative mb-4">
+          <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#c7c4d7]" />
+          <input placeholder="חיפוש..." value={addSearch} onChange={e => setAddSearch(e.target.value)}
+            className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-sm
+              outline-none bg-[#eff4ff] focus:border-[#4648d4] transition-all font-[inherit] placeholder:text-[#c7c4d7]" />
+        </div>
+        <div className="max-h-[52vh] overflow-auto -mx-1 px-1">
           {master.map((cat, ci) => {
             const items = cat.items.filter(i => !addSearch || i.name.includes(addSearch));
             if (!items.length) return null;
             return (
-              <div key={ci} className="mb-2">
-                <div className="text-[13px] font-bold mb-1" style={{ color: cat.color }}>
-                  {cat.icon} {cat.name}
+              <div key={ci} className="mb-3">
+                <div className="text-[12px] font-bold mb-1.5 flex items-center gap-1.5" style={{ color: cat.color }}>
+                  <span>{cat.icon}</span>{cat.name}
                 </div>
                 {items.map((item, ii) => {
                   const exists = list.items.find(i => i.name === item.name && i.category === cat.name);
                   return (
-                    <div key={ii}
-                      onClick={() => !exists && addItemFromMaster(item, cat)}
-                      className="flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer"
+                    <div key={ii} onClick={() => !exists && addItemFromMaster(item, cat)}
+                      className="flex items-center gap-2.5 py-2.5 px-2.5 rounded-xl hover:bg-[#f0f4ff] transition-colors"
                       style={{ opacity: exists ? 0.4 : 1, cursor: exists ? 'default' : 'pointer' }}>
-                      <div className="flex-1 text-[13px]">{item.name}</div>
+                      <div className="flex-1 text-[14px] text-[#0b1c30] text-right">{item.name}</div>
                       {exists
-                        ? <span className="text-[10px] py-0.5 px-2 rounded-md font-semibold bg-gray-100 text-gray-400">ברשימה</span>
-                        : <span className="text-[10px] py-0.5 px-2 rounded-md font-semibold bg-[#e8f5e9] text-[#2e7d32]">+ הוסף</span>
+                        ? <span className="text-[10px] py-1 px-2.5 rounded-full font-semibold bg-[#f0f4ff] text-[#464554]">ברשימה</span>
+                        : <span className="text-[10px] py-1 px-2.5 rounded-full font-semibold bg-[#e1e0ff] text-[#4648d4] flex items-center gap-1"><Plus size={9} /> הוסף</span>
                       }
                     </div>
                   );

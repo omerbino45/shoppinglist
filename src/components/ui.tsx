@@ -1,12 +1,14 @@
 import React from 'react';
+import { Home, List, Archive, Settings, Plus, RefreshCw, Calendar, ChevronRight } from 'lucide-react';
+import type { Screen } from '../types';
 
 // ═══ Toast ═══
 export function Toast({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#1a1a2e] text-white
-      px-7 py-3 rounded-2xl text-sm font-semibold z-[999] shadow-2xl whitespace-nowrap"
-      style={{ animation: 'fadeUp .3s ease' }}>
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
+      px-6 py-3 rounded-2xl text-sm font-semibold z-[999] shadow-2xl whitespace-nowrap"
+      style={{ animation: 'fadeUp .25s ease' }}>
       {msg}
     </div>
   );
@@ -17,89 +19,243 @@ export function Header({ title, subtitle, onBack, children }: {
   title: string; subtitle?: string; onBack?: () => void; children?: React.ReactNode;
 }) {
   return (
-    <div className="bg-gradient-to-bl from-[#1a1a2e] via-[#16213e] to-[#0f3460]
-      text-white py-7 px-5 text-center sticky top-0 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.15)]">
-      {onBack && (
-        <button onClick={onBack}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/15 border-none
-            text-white w-9 h-9 rounded-xl text-lg cursor-pointer flex items-center justify-center
-            hover:bg-white/25 transition-colors">
-          →
-        </button>
-      )}
-      <h1 className="text-xl font-extrabold tracking-tight">{title}</h1>
-      {subtitle && <p className="text-xs opacity-60 font-light mt-0.5">{subtitle}</p>}
+    <div className="bg-[#dce9ff] px-5 sticky top-0 z-50"
+      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))', paddingBottom: '0.75rem' }}>
+      <div className="flex items-center gap-3 mb-1">
+        {onBack && (
+          <button onClick={onBack}
+            className="w-8 h-8 flex items-center justify-center rounded-xl
+              bg-white/60 border-none cursor-pointer text-[#0b1c30] active:scale-95 transition-all shrink-0">
+            <ChevronRight size={18} />
+          </button>
+        )}
+        <div className="flex-1 text-right">
+          <h1 className="text-[22px] font-bold text-[#0b1c30] leading-tight">{title}</h1>
+          {subtitle && <p className="text-[13px] text-[#464554] mt-0.5">{subtitle}</p>}
+        </div>
+      </div>
       {children}
     </div>
   );
 }
 
-// ═══ BottomBar ═══
-export function BottomBar({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e8e4df]
-      py-3 px-5 flex gap-2.5 z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-      {children}
-    </div>
-  );
+// ═══ Bottom Tab Bar ═══
+const TABS: { id: Screen; label: string; icon: React.ReactNode }[] = [
+  { id: 'home',     label: 'בית',           icon: <Home size={22} /> },
+  { id: 'lists',    label: 'רשימות',        icon: <List size={22} /> },
+  { id: 'master',   label: 'מאסטר',         icon: <Archive size={22} /> },
+  { id: 'settings', label: 'הגדרות',        icon: <Settings size={22} /> },
+];
+
+function activeTab(screen: Screen): Screen {
+  if (screen === 'new')  return 'home';
+  if (screen === 'shop') return 'lists';
+  return screen;
 }
 
-// ═══ Button ═══
-export function Btn({ bg, fg, children, onClick, className = '', flex = 1 }: {
-  bg: string; fg: string; children: React.ReactNode; onClick?: () => void;
-  className?: string; flex?: number | string;
+export function BottomTabBar({ screen, onNavigate }: {
+  screen: Screen; onNavigate: (s: Screen) => void;
 }) {
+  const active = activeTab(screen);
   return (
-    <button onClick={onClick}
-      className={`py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer
-        transition-transform active:scale-[0.97] ${className}`}
-      style={{ background: bg, color: fg, flex, fontFamily: 'inherit' }}>
-      {children}
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#e5eeff]"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="flex">
+        {TABS.map(tab => {
+          const isActive = tab.id === active;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onNavigate(tab.id)}
+              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5
+                border-none bg-transparent cursor-pointer active:scale-95 transition-all"
+              style={{ fontFamily: 'inherit' }}
+            >
+              <div className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                isActive ? 'bg-[#e1e0ff]' : ''
+              }`} style={{ color: isActive ? '#4648d4' : '#464554' }}>
+                {tab.icon}
+              </div>
+              <span className="text-[11px] font-semibold"
+                style={{ color: isActive ? '#4648d4' : '#464554' }}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══ FAB ═══
+export function FAB({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="fixed z-40 w-14 h-14 rounded-full border-none cursor-pointer
+        flex items-center justify-center text-white active:scale-95 transition-transform"
+      style={{
+        bottom: '5.5rem',
+        left: '1.25rem',
+        background: '#4648d4',
+        boxShadow: '0 4px 16px rgba(70,72,212,0.4)',
+        fontFamily: 'inherit',
+      }}
+    >
+      <Plus size={26} />
     </button>
   );
 }
 
-// ═══ Pill Filter ═══
+// ═══ Skeleton ═══
+export function Skeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`rounded-2xl ${className}`}
+      style={{
+        background: 'linear-gradient(90deg, #e5eeff 25%, #eff4ff 50%, #e5eeff 75%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 1.5s infinite',
+      }}
+    />
+  );
+}
+
+// ═══ EmptyState ═══
+export function EmptyState({ icon, title, sub }: {
+  icon: React.ReactNode; title: string; sub?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-14 text-center">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 text-[#4648d4]"
+        style={{ background: 'linear-gradient(135deg, #e1e0ff, #eff4ff)' }}>
+        {icon}
+      </div>
+      <p className="text-[#464554] font-semibold text-sm">{title}</p>
+      {sub && <p className="text-[#c7c4d7] text-xs mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+// ═══ Pill ═══
 export function Pill({ active, children, onClick }: {
   active: boolean; children: React.ReactNode; onClick: () => void;
 }) {
   return (
-    <button onClick={onClick}
-      className={`py-2 px-3.5 rounded-xl text-xs font-semibold cursor-pointer
-        whitespace-nowrap border-2 transition-all ${
-        active
-          ? 'border-[#e63946] bg-[#e63946] text-white'
-          : 'border-[#e8e4df] bg-white text-[#1a1a1a] hover:border-[#ccc]'
-      }`} style={{ fontFamily: 'inherit' }}>
+    <button
+      onClick={onClick}
+      className="py-2 px-4 rounded-full text-xs font-semibold cursor-pointer
+        whitespace-nowrap border transition-all active:scale-95"
+      style={{
+        background:  active ? '#4648d4' : '#ffffff',
+        color:       active ? '#ffffff' : '#464554',
+        borderColor: active ? 'transparent' : '#c7c4d7',
+        fontFamily: 'inherit',
+      }}
+    >
       {children}
     </button>
   );
 }
 
-// ═══ Input ═══
-export const inputClass = `w-full py-3 px-3.5 border-2 border-[#e8e4df] rounded-xl
-  text-sm outline-none bg-white focus:border-[#e63946] transition-colors font-[inherit]`;
+// ═══ inputClass ═══
+export const inputClass = `w-full py-3 px-4 border border-[#c7c4d7] rounded-2xl
+  text-sm outline-none bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
+  transition-all font-[inherit] placeholder:text-[#c7c4d7]`;
 
 // ═══ Tag ═══
 export function Tag({ bg, fg, children }: { bg: string; fg: string; children: React.ReactNode }) {
   return (
-    <span className="text-[10px] py-0.5 px-2 rounded-md font-semibold whitespace-nowrap"
+    <span className="text-[10px] py-0.5 px-2 rounded-full font-semibold whitespace-nowrap"
       style={{ background: bg, color: fg }}>
       {children}
     </span>
   );
 }
 
-// ═══ Modal (bottom sheet) ═══
+// ═══ FreqTag ═══
+export function FreqTag({ freq }: { freq: 'monthly' | 'occasional' }) {
+  return freq === 'monthly'
+    ? (
+      <span className="inline-flex items-center gap-1 text-[10px] py-0.5 px-2 rounded-full font-semibold
+        bg-[#e1e0ff] text-[#4648d4] whitespace-nowrap">
+        <RefreshCw size={9} /> חודשי
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-[10px] py-0.5 px-2 rounded-full font-semibold
+        bg-[#fef3c7] text-[#825100] whitespace-nowrap">
+        <Calendar size={9} /> מדי פעם
+      </span>
+    );
+}
+
+// ═══ Checkbox ═══
+export function Checkbox({ checked }: { checked: boolean }) {
+  return (
+    <div
+      className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 transition-all"
+      style={{
+        border:     checked ? 'none' : '2px solid #c7c4d7',
+        background: checked ? '#006c49' : '#ffffff',
+      }}
+    >
+      {checked && (
+        <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+          <path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" strokeWidth="2.2"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+// ═══ SectionLabel ═══
+export function SectionLabel({ label, color = '#464554', dot }: {
+  label: string; color?: string; dot?: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 mb-2 mt-3 px-1">
+      {dot && <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dot }} />}
+      <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color }}>{label}</span>
+    </div>
+  );
+}
+
+// ═══ Card ═══
+export function Card({ children, onClick, selected, muted, className = '', accentColor }: {
+  children: React.ReactNode; onClick?: () => void; selected?: boolean;
+  muted?: boolean; className?: string; accentColor?: string;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-2xl border cursor-pointer transition-all ${
+        selected ? 'border-[#4648d4] ring-2 ring-[#e1e0ff]' : 'border-[#e5eeff]'
+      } ${muted ? 'opacity-55' : ''} ${className}`}
+      style={accentColor ? { borderRightWidth: '4px', borderRightColor: accentColor } : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ═══ BottomSheet ═══
 export function BottomSheet({ open, onClose, children }: {
   open: boolean; onClose: () => void; children: React.ReactNode;
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/50 z-[200] flex items-end justify-center"
+    <div className="fixed inset-0 bg-black/40 z-[200] flex items-end justify-center"
       onClick={onClose}>
-      <div className="bg-white rounded-t-[20px] p-6 pb-10 w-full max-w-[500px]"
+      <div
+        className="bg-white rounded-t-[24px] w-full max-w-[500px]"
+        style={{
+          padding: '24px 24px max(24px, env(safe-area-inset-bottom))',
+          animation: 'slideUp .28s cubic-bezier(0.32,0.72,0,1)',
+        }}
         onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[#e5eeff] rounded-full mx-auto mb-5" />
         {children}
       </div>
     </div>
@@ -112,34 +268,13 @@ export function CenterModal({ open, onClose, children }: {
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4"
+    <div className="fixed inset-0 bg-black/40 z-[200] flex items-center justify-center p-5"
       onClick={onClose}>
-      <div className="bg-white rounded-2xl p-6 w-full max-w-[400px]"
+      <div className="bg-white rounded-[24px] p-6 w-full max-w-[420px] shadow-xl"
+        style={{ animation: 'scaleIn .2s ease' }}
         onClick={e => e.stopPropagation()}>
         {children}
       </div>
-    </div>
-  );
-}
-
-// ═══ FreqTag ═══
-export function FreqTag({ freq }: { freq: 'monthly' | 'occasional' }) {
-  return freq === 'monthly'
-    ? <Tag bg="#e8f5e9" fg="#2e7d32">🔄</Tag>
-    : <Tag bg="#fff3e0" fg="#e65100">📅</Tag>;
-}
-
-// ═══ Checkbox ═══
-export function Checkbox({ checked, color = '#2d6a4f' }: { checked: boolean; color?: string }) {
-  return (
-    <div className="w-[22px] h-[22px] rounded-[7px] flex items-center justify-center
-      text-[11px] shrink-0 transition-all"
-      style={{
-        border: checked ? 'none' : '2.5px solid #e0dcd7',
-        background: checked ? color : 'transparent',
-        color: checked ? '#fff' : 'transparent',
-      }}>
-      ✓
     </div>
   );
 }

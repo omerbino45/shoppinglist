@@ -1,170 +1,198 @@
 import { useState } from 'react';
+import { MoreVertical, Lock, Trash2, List } from 'lucide-react';
 import type { ShoppingList } from '../types';
 import { deleteShoppingList, updateShoppingList } from '../lib/db';
-import { formatDate } from '../lib/utils';
-import { Header, Pill, Toast, inputClass } from '../components/ui';
+import { formatDate, formatDateShort } from '../lib/utils';
+import { Header, Toast, EmptyState, BottomSheet } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
 interface Props {
   lists: ShoppingList[];
   onUpdate: (lists: ShoppingList[]) => void;
   onOpenList: (id: string) => void;
-  onBack: () => void;
 }
 
-export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Props) {
-  const [search, setSearch] = useState('');
-  const [selMode, setSelMode] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const { message, fire } = useToast();
+export default function ListsScreen({ lists, onUpdate, onOpenList }: Props) {
+  const [tab, setTab]           = useState<'open' | 'closed'>('open');
+  const [menuList, setMenuList] = useState<ShoppingList | null>(null);
+  const { message, fire }       = useToast();
 
-  const openLists = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const closedLists = lists.filter(l => l.closed).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const openLists   = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const closedLists = lists.filter(l =>  l.closed).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const filterList = (l: ShoppingList) =>
-    !search || l.visibleId.includes(search) || l.id.includes(search) ||
-    formatDate(l.date).includes(search) || l.store.includes(search);
+  const shown = tab === 'open' ? openLists : closedLists;
 
-  const filteredOpen = openLists.filter(filterList);
-  const filteredClosed = closedLists.filter(filterList);
-  const allSelOpen = [...selected].every(id => openLists.find(l => l.id === id));
-
-  function toggleSelect(id: string) {
-    setSelected(prev => {
-      const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
-      return s;
-    });
+  async function handleClose(list: ShoppingList) {
+    await updateShoppingList(list.id, { closed: true });
+    onUpdate(lists.map(l => l.id === list.id ? { ...l, closed: true } : l));
+    setMenuList(null);
+    fire('הרשימה נסגרה');
   }
 
-  async function handleClose() {
-    const updated = lists.map(l => selected.has(l.id) ? { ...l, closed: true } : l);
-    for (const id of selected) {
-      await updateShoppingList(id, { closed: true });
-    }
-    onUpdate(updated);
-    setSelected(new Set());
-    setSelMode(false);
-    fire('הרשימות נסגרו ✅');
+  async function handleReopen(list: ShoppingList) {
+    await updateShoppingList(list.id, { closed: false });
+    onUpdate(lists.map(l => l.id === list.id ? { ...l, closed: false } : l));
+    setMenuList(null);
+    fire('הרשימה נפתחה');
   }
 
-  async function handleDelete() {
-    for (const id of selected) {
-      await deleteShoppingList(id);
-    }
-    onUpdate(lists.filter(l => !selected.has(l.id)));
-    setSelected(new Set());
-    setSelMode(false);
-    fire('נמחק!');
+  async function handleDelete(list: ShoppingList) {
+    await deleteShoppingList(list.id);
+    onUpdate(lists.filter(l => l.id !== list.id));
+    setMenuList(null);
+    fire('נמחק');
   }
 
-  function ListCard({ list, isClosed }: { list: ShoppingList; isClosed?: boolean }) {
-    const done = list.items.filter(i => i.checked).length;
-    const s = selected.has(list.id);
-
-    return (
-      <div
-        className={`rounded-[14px] py-3.5 px-4 mb-2 cursor-pointer border-2 transition-all
-          shadow-[0_2px_10px_rgba(0,0,0,0.04)]
-          ${s ? 'bg-[#fff1f2] border-[#e63946]' : 'bg-white border-transparent'}
-          ${isClosed ? 'opacity-60' : ''}`}
-        onClick={() => {
-          if (selMode) toggleSelect(list.id);
-          else onOpenList(list.id);
-        }}>
-        <div className="flex justify-between items-start mb-1">
-          <div>
-            <div className="font-bold text-base">
-              📅 {formatDate(list.date)}
-              <span className="text-sm text-gray-400 font-medium mr-2">{list.store}</span>
-            </div>
-            <div className="text-[11px] text-gray-400 mt-0.5">{list.visibleId}</div>
-          </div>
-          <span className={`text-[10px] py-0.5 px-2 rounded-md font-semibold whitespace-nowrap ${
-            isClosed ? 'bg-gray-100 text-gray-400' : 'bg-[#e8f5e9] text-[#2e7d32]'
-          }`}>
-            {isClosed ? 'סגורה 🔒' : 'פתוחה'}
-          </span>
-        </div>
-        {!isClosed && (
-          <>
-            <div className="mt-2 h-1.5 bg-gray-100 rounded-sm overflow-hidden">
-              <div className="h-full rounded-sm transition-all duration-300"
-                style={{
-                  width: `${(done / list.items.length) * 100}%`,
-                  background: 'linear-gradient(90deg, #2d6a4f, #52b788)'
-                }} />
-            </div>
-            <div className="text-[11px] text-gray-400 mt-1">{done}/{list.items.length} פריטים</div>
-          </>
-        )}
-        {isClosed && (
-          <div className="text-[11px] text-gray-400 mt-1">
-            {done}/{list.items.length} פריטים
-          </div>
-        )}
-      </div>
-    );
+  function uniqueCatCount(list: ShoppingList) {
+    return new Set(list.items.map(i => i.category)).size;
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-28">
-      <Header title="📋 הרשימות שלי"
-        subtitle={`${openLists.length} פתוחות · ${closedLists.length} סגורות`}
-        onBack={onBack} />
+    <div className="bg-[#f8f9ff]">
+      <Header title="הרשימות שלי" />
 
-      <div className="sticky top-[76px] z-40 bg-[#faf8f5] border-b border-[#e8e4df] px-4 py-2.5 flex gap-2">
-        <input placeholder="🔍 חיפוש מזהה / תאריך..." value={search}
-          onChange={e => setSearch(e.target.value)} className={inputClass + ' flex-1'} />
-        <Pill active={selMode} onClick={() => { setSelMode(!selMode); setSelected(new Set()); }}>
-          {selMode ? '✕' : 'בחירה'}
-        </Pill>
-      </div>
-
-      <div className="max-w-lg mx-auto px-4 py-2">
-        {filteredOpen.length > 0 && (
-          <>
-            <div className="text-[13px] font-bold text-[#2d6a4f] mb-2 mt-1.5 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2d6a4f]" />
-              רשימות פתוחות ({filteredOpen.length})
-            </div>
-            {filteredOpen.map(l => <ListCard key={l.id} list={l} />)}
-          </>
-        )}
-        {filteredClosed.length > 0 && (
-          <>
-            <div className="text-[13px] font-bold text-gray-400 mb-2 mt-5 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-gray-400" />
-              רשימות סגורות ({filteredClosed.length})
-            </div>
-            {filteredClosed.map(l => <ListCard key={l.id} list={l} isClosed />)}
-          </>
-        )}
-        {!filteredOpen.length && !filteredClosed.length && (
-          <div className="text-center py-10 text-gray-300">
-            <div className="text-4xl mb-2">📝</div>
-            <div className="font-semibold">{search ? 'לא נמצאו רשימות' : 'אין עדיין רשימות'}</div>
-          </div>
-        )}
-      </div>
-
-      {selMode && selected.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e8e4df]
-          py-3 px-5 flex gap-2.5 z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-          {allSelOpen && (
-            <button onClick={handleClose}
-              className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#fff3e0] text-[#e65100]"
-              style={{ fontFamily: 'inherit' }}>
-              סגור ({selected.size})
-            </button>
-          )}
-          <button onClick={handleDelete}
-            className="flex-1 py-3.5 border-none rounded-xl font-bold text-sm cursor-pointer bg-[#ffeaea] text-[#d32f2f]"
-            style={{ fontFamily: 'inherit' }}>
-            מחק ({selected.size}) 🗑️
+      {/* Segmented control */}
+      <div className="px-5 pt-3 pb-0">
+        <div className="flex bg-[#e5eeff] rounded-2xl p-1">
+          <button
+            onClick={() => setTab('open')}
+            className="flex-1 py-2.5 rounded-xl border-none cursor-pointer font-bold text-[14px] transition-all"
+            style={{
+              background:   tab === 'open' ? '#ffffff' : 'transparent',
+              color:        tab === 'open' ? '#0b1c30' : '#464554',
+              boxShadow:    tab === 'open' ? '0 1px 6px rgba(0,0,0,0.08)' : 'none',
+              fontFamily:   'inherit',
+            }}
+          >
+            פתוחות ({openLists.length})
+          </button>
+          <button
+            onClick={() => setTab('closed')}
+            className="flex-1 py-2.5 rounded-xl border-none cursor-pointer font-bold text-[14px] transition-all"
+            style={{
+              background:   tab === 'closed' ? '#ffffff' : 'transparent',
+              color:        tab === 'closed' ? '#0b1c30' : '#464554',
+              boxShadow:    tab === 'closed' ? '0 1px 6px rgba(0,0,0,0.08)' : 'none',
+              fontFamily:   'inherit',
+            }}
+          >
+            סגורות ({closedLists.length})
           </button>
         </div>
-      )}
+      </div>
+
+      {/* List */}
+      <div className="max-w-lg mx-auto px-5 py-3 flex flex-col gap-2.5">
+        {shown.length === 0 ? (
+          <EmptyState
+            icon={<List size={26} />}
+            title={tab === 'open' ? 'אין רשימות פתוחות' : 'אין רשימות סגורות'}
+            sub={tab === 'open' ? 'צור רשימה חדשה מהתפריט הראשי' : undefined}
+          />
+        ) : shown.map(list => {
+          const done     = list.items.filter(i => i.checked).length;
+          const catCount = uniqueCatCount(list);
+          const isClosed = list.closed;
+          const accentColor = isClosed ? '#c7c4d7' : '#006c49';
+
+          return (
+            <div
+              key={list.id}
+              className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
+              style={{ borderRight: `4px solid ${accentColor}` }}
+            >
+              {/* Main row */}
+              <div
+                className="flex items-start gap-3 px-4 pt-4 pb-2 cursor-pointer"
+                onClick={() => onOpenList(list.id)}
+              >
+                {/* Store icon */}
+                <div className="w-12 h-12 rounded-2xl bg-[#eff4ff] flex items-center justify-center text-2xl shrink-0">
+                  🛒
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-[15px] text-[#0b1c30] leading-tight">{list.store}</div>
+                  <div className="text-[12px] text-[#464554] mt-0.5">
+                    {list.visibleId} · {formatDateShort(list.date)}
+                  </div>
+                </div>
+                {/* 3-dot menu */}
+                <button
+                  onClick={e => { e.stopPropagation(); setMenuList(list); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl border-none
+                    bg-transparent text-[#c7c4d7] cursor-pointer hover:bg-[#f0f4ff] hover:text-[#464554] transition-all shrink-0"
+                >
+                  <MoreVertical size={16} />
+                </button>
+              </div>
+
+              {/* Info strip */}
+              <div className="mx-4 mb-3 bg-[#eff4ff] rounded-xl px-3 py-2">
+                <span className="text-[12px] text-[#464554] font-medium">
+                  {list.items.length} פריטים · {catCount} קטגוריות
+                  {!isClosed && list.items.length > 0 && (
+                    <span className="mr-2 text-[#006c49] font-semibold">· {done} נלקחו</span>
+                  )}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Per-list action sheet */}
+      <BottomSheet open={menuList !== null} onClose={() => setMenuList(null)}>
+        {menuList && (
+          <>
+            <p className="text-center font-bold text-[16px] text-[#0b1c30] mb-1">{menuList.store}</p>
+            <p className="text-center text-[13px] text-[#464554] mb-5">
+              {menuList.visibleId} · {formatDate(menuList.date)}
+            </p>
+            <div className="flex flex-col gap-2.5">
+              {!menuList.closed ? (
+                <button
+                  onClick={() => handleClose(menuList)}
+                  className="w-full py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                    flex items-center justify-center gap-2 active:scale-[0.98] transition-all
+                    bg-[#fff8e1] text-[#825100]"
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  <Lock size={16} /> סגור רשימה
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleReopen(menuList)}
+                  className="w-full py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                    flex items-center justify-center gap-2 active:scale-[0.98] transition-all
+                    bg-[#e6f4ea] text-[#006c49]"
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  פתח מחדש
+                </button>
+              )}
+              <button
+                onClick={() => handleDelete(menuList)}
+                className="w-full py-3.5 rounded-2xl border-none font-bold text-sm cursor-pointer
+                  flex items-center justify-center gap-2 active:scale-[0.98] transition-all
+                  bg-[#fdecea] text-[#ba1a1a]"
+                style={{ fontFamily: 'inherit' }}
+              >
+                <Trash2 size={16} /> מחק רשימה
+              </button>
+              <button
+                onClick={() => setMenuList(null)}
+                className="w-full py-3 rounded-2xl border-none font-semibold text-sm cursor-pointer
+                  bg-[#f0f4ff] text-[#464554] active:scale-[0.98] transition-all"
+                style={{ fontFamily: 'inherit' }}
+              >
+                ביטול
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
+
       <Toast msg={message} />
     </div>
   );
