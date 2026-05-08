@@ -48,4 +48,4 @@ export interface ShoppingList {
   createdAt: string;
 }
 
-export type Screen = 'login' | 'home' | 'new' | 'lists' | 'shop' | 'master';
+export type Screen = 'login' | 'home' | 'new' | 'lists' | 'shop' | 'master' | 'settings';

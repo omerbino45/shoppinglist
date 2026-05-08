@@ -1,36 +1,77 @@
 @import "tailwindcss";
 
 @theme {
-  --font-rubik: 'Rubik', sans-serif;
-  --color-brand: #e63946;
-  --color-brand-light: #fff1f2;
-  --color-green: #2d6a4f;
-  --color-green-light: #d8f3dc;
-  --color-surface: #faf8f5;
-  --color-card: #ffffff;
-  --color-border: #e8e4df;
-  --color-navy: #1a1a2e;
-  --color-navy-mid: #16213e;
-  --color-navy-light: #0f3460;
+  --font-assistant: 'Assistant', sans-serif;
+  --color-bg:                #f8f9ff;
+  --color-surface:           #ffffff;
+  --color-surface-low:       #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-header-bg:         #dce9ff;
+  --color-primary:           #4648d4;
+  --color-primary-light:     #e1e0ff;
+  --color-secondary:         #006c49;
+  --color-secondary-light:   #6cf8bb;
+  --color-tertiary:          #825100;
+  --color-error:             #ba1a1a;
+  --color-text:              #0b1c30;
+  --color-text-muted:        #464554;
+  --color-border:            #c7c4d7;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap');
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 body {
-  font-family: 'Rubik', sans-serif;
-  background: #faf8f5;
-  color: #1a1a1a;
+  font-family: 'Assistant', sans-serif;
+  background: #c7c4d7;
+  color: #0b1c30;
   direction: rtl;
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+#root {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100dvh;
+  background: #f8f9ff;
+  position: relative;
+  overflow-x: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.18);
 }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
