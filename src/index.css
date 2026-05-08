@@ -26,10 +26,22 @@
 
 body {
   font-family: 'Assistant', sans-serif;
-  background: #f8f9ff;
+  background: #c7c4d7;
   color: #0b1c30;
   direction: rtl;
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+#root {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100dvh;
+  background: #f8f9ff;
+  position: relative;
+  overflow-x: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.18);
 }
 
 @keyframes fadeUp {
