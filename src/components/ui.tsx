@@ -1,12 +1,11 @@
 import React from 'react';
-import { Home, List, Archive, Settings, Plus, RefreshCw, Calendar, ChevronRight } from 'lucide-react';
-import type { Screen } from '../types';
+import { Plus, RefreshCw, Calendar, ChevronRight } from 'lucide-react';
 
 // ═══ Toast ═══
 export function Toast({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[#0b1c30] text-white
       px-6 py-3 rounded-2xl text-sm font-semibold z-[999] shadow-2xl whitespace-nowrap"
       style={{ animation: 'bounceIn .3s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
       {msg}
@@ -39,58 +38,6 @@ export function Header({ title, subtitle, onBack, children }: {
   );
 }
 
-// ═══ Bottom Tab Bar ═══
-const TABS: { id: Screen; label: string; icon: React.ReactNode }[] = [
-  { id: 'home',     label: 'בית',           icon: <Home size={22} /> },
-  { id: 'lists',    label: 'רשימות',        icon: <List size={22} /> },
-  { id: 'master',   label: 'מאסטר',         icon: <Archive size={22} /> },
-  { id: 'settings', label: 'הגדרות',        icon: <Settings size={22} /> },
-];
-
-function activeTab(screen: Screen): Screen {
-  if (screen === 'new')  return 'home';
-  if (screen === 'shop') return 'lists';
-  return screen;
-}
-
-export function BottomTabBar({ screen, onNavigate }: {
-  screen: Screen; onNavigate: (s: Screen) => void;
-}) {
-  const active = activeTab(screen);
-  return (
-    <div className="fixed bottom-0 z-50 bg-white border-t border-[#e5eeff] w-full"
-      style={{ maxWidth: 390, left: '50%', transform: 'translateX(-50%)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex">
-        {TABS.map(tab => {
-          const isActive = tab.id === active;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onNavigate(tab.id)}
-              className="flex-1 flex flex-col items-center justify-center py-2 gap-0
-                border-none bg-transparent cursor-pointer active:scale-90 transition-all"
-              style={{ fontFamily: 'inherit' }}
-            >
-              {isActive ? (
-                <div className="flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-full bg-[#e1e0ff] text-[#4648d4]"
-                  style={{ animation: 'tabPop 0.22s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
-                  {tab.icon}
-                  <span className="text-[11px] font-bold">{tab.label}</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-0.5 py-1.5 text-[#464554] transition-colors">
-                  {tab.icon}
-                  <span className="text-[11px] font-semibold">{tab.label}</span>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ═══ FAB ═══
 export function FAB({ onClick }: { onClick: () => void }) {
   return (
@@ -99,7 +46,7 @@ export function FAB({ onClick }: { onClick: () => void }) {
       className="fixed z-40 w-14 h-14 rounded-full border-none cursor-pointer
         flex items-center justify-center text-white active:scale-90 transition-transform"
       style={{
-        bottom: '5.5rem',
+        bottom: '1.5rem',
         left: 'calc(50% - 195px + 1.25rem)',
         background: '#4648d4',
         animation: 'pulseGlow 2.8s ease-in-out infinite',
