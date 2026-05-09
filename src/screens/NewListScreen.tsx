@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Search, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import type { MasterCategory, ShoppingItem, ShoppingList } from '../types';
 import { generateListId, generateVisibleId, saveShoppingList } from '../lib/db';
@@ -16,6 +16,8 @@ interface Props {
 export default function NewListScreen({ userId, master, lists, onCreated, onBack }: Props) {
   const [date, setDate]     = useState('');
   const [store, setStore]   = useState('');
+
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const recentStores = Array.from(
     new Map(
@@ -79,12 +81,24 @@ export default function NewListScreen({ userId, master, lists, onCreated, onBack
               {/* Date */}
               <div className="flex flex-col gap-1 flex-1">
                 <span className="text-[11px] font-semibold text-[#464554] pr-1">תאריך *</span>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className={inputClass + ' w-full'}
-                />
+                <div className="relative">
+                  <div
+                    className={inputClass + ' w-full flex items-center cursor-pointer select-none'}
+                    onClick={() => dateInputRef.current?.showPicker?.()}
+                  >
+                    {date
+                      ? <span className="text-[#0b1c30]">{new Date(date + 'T00:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                      : <span className="text-[#c7c4d7]">בחר תאריך</span>
+                    }
+                  </div>
+                  <input
+                    ref={dateInputRef}
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                </div>
               </div>
 
               {/* Store with dropdown */}
