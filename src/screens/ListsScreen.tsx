@@ -10,9 +10,10 @@ interface Props {
   lists: ShoppingList[];
   onUpdate: (lists: ShoppingList[]) => void;
   onOpenList: (id: string) => void;
+  onBack: () => void;
 }
 
-export default function ListsScreen({ lists, onUpdate, onOpenList }: Props) {
+export default function ListsScreen({ lists, onUpdate, onOpenList, onBack }: Props) {
   const [tab, setTab]           = useState<'open' | 'closed'>('open');
   const [menuList, setMenuList] = useState<ShoppingList | null>(null);
   const { message, fire }       = useToast();
@@ -49,7 +50,7 @@ export default function ListsScreen({ lists, onUpdate, onOpenList }: Props) {
 
   return (
     <div className="bg-[#f8f9ff]">
-      <Header title="הרשימות שלי" />
+      <Header title="הרשימות שלי" onBack={onBack} />
 
       {/* Segmented control */}
       <div className="px-5 pt-3 pb-0">

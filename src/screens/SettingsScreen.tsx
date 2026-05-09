@@ -7,15 +7,16 @@ const AVATAR_COLORS = ['#4648d4','#006c49','#825100','#c0392b','#2980b9','#8e44a
 interface Props {
   user: User;
   onSwitchUser: () => void;
+  onBack: () => void;
 }
 
-export default function SettingsScreen({ user, onSwitchUser }: Props) {
+export default function SettingsScreen({ user, onSwitchUser, onBack }: Props) {
   const colorIdx = user.name.charCodeAt(0) % AVATAR_COLORS.length;
   const avatarColor = AVATAR_COLORS[colorIdx];
 
   return (
     <div className="min-h-dvh bg-[#f8f9ff]">
-      <Header title="הגדרות" />
+      <Header title="הגדרות" onBack={onBack} />
 
       <div className="max-w-md mx-auto px-5 py-5">
         {/* Current user card */}

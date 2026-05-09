@@ -1,4 +1,5 @@
-import { ShoppingCart, List, Archive, ChevronLeft } from 'lucide-react';
+import { useState } from 'react';
+import { ShoppingCart, List, Archive, ChevronLeft, Settings } from 'lucide-react';
 import type { User, ShoppingList, Screen } from '../types';
 import { formatDate } from '../lib/utils';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function HomeScreen({ user, lists, onNavigate }: Props) {
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const openLists   = lists.filter(l => !l.closed).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const closedCount = lists.filter(l =>  l.closed).length;
   const avatarColor = AVATAR_COLORS[user.name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -21,11 +23,38 @@ export default function HomeScreen({ user, lists, onNavigate }: Props) {
       {/* Flat header */}
       <div className="bg-[#dce9ff] px-5 flex items-center justify-between"
         style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))', paddingBottom: '0.75rem' }}>
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-          style={{ background: avatarColor }}
-        >
-          {user.name[0]}
+        <div className="relative">
+          <button
+            onClick={() => setShowAvatarMenu(v => !v)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 border-none cursor-pointer active:scale-95 transition-transform"
+            style={{ background: avatarColor, fontFamily: 'inherit' }}
+          >
+            {user.name[0]}
+          </button>
+          {showAvatarMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-[90]"
+                onClick={() => setShowAvatarMenu(false)}
+              />
+              <div
+                className="absolute top-full mt-2 right-0 z-[100] bg-white rounded-2xl border border-[#e5eeff] shadow-xl min-w-[160px] overflow-hidden"
+                style={{ animation: 'fadeUp 0.18s ease both' }}
+              >
+                <div className="px-4 py-3 border-b border-[#f0f4ff]">
+                  <span className="text-[13px] font-bold text-[#0b1c30]">{user.name}</span>
+                </div>
+                <button
+                  onClick={() => { onNavigate('settings'); setShowAvatarMenu(false); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 border-none bg-transparent cursor-pointer text-right active:bg-[#f0f4ff] transition-colors"
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  <Settings size={16} color="#464554" />
+                  <span className="text-[14px] font-semibold text-[#0b1c30]">הגדרות</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <h1 className="text-[20px] font-bold text-[#4648d4]"
           style={{ animation: 'bounceIn 0.42s ease both' }}>רשימת הקניות שלי</h1>

@@ -17,9 +17,10 @@ const PRESET_EMOJIS = Object.keys(EMOJI_COLORS);
 interface Props {
   master: MasterCategory[];
   onUpdate: (master: MasterCategory[]) => void;
+  onBack: () => void;
 }
 
-export default function MasterScreen({ master, onUpdate }: Props) {
+export default function MasterScreen({ master, onUpdate, onBack }: Props) {
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>(() => {
     const c: Record<number, boolean> = {};
     master.forEach((_, i) => { c[i] = true; });
@@ -137,7 +138,7 @@ export default function MasterScreen({ master, onUpdate }: Props) {
 
   return (
     <div className="min-h-dvh bg-[#f8f9ff] pb-28">
-      <Header title="רשימת מאסטר" />
+      <Header title="רשימת מאסטר" onBack={onBack} />
 
       {/* Tabs */}
       <div className="sticky top-[73px] z-40 bg-[#f8f9ff] border-b border-[#e5eeff] px-4 py-2.5 flex gap-2">
