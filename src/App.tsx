@@ -63,6 +63,7 @@ export default function App() {
         <NewListScreen
           userId={user.id}
           master={master}
+          lists={lists}
           onCreated={(list) => { setLists(prev => [list, ...prev]); setScreen('home'); }}
           onBack={() => setScreen('home')}
         />

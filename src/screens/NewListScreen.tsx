@@ -8,13 +8,23 @@ import { useToast } from '../hooks/useToast';
 interface Props {
   userId: string;
   master: MasterCategory[];
+  lists: ShoppingList[];
   onCreated: (list: ShoppingList) => void;
   onBack: () => void;
 }
 
-export default function NewListScreen({ userId, master, onCreated, onBack }: Props) {
+export default function NewListScreen({ userId, master, lists, onCreated, onBack }: Props) {
   const [date, setDate]     = useState('');
   const [store, setStore]   = useState('');
+
+  const recentStores = Array.from(
+    new Map(
+      [...lists]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .map(l => [l.store, l.store])
+    ).values()
+  ).slice(0, 5);
+  const [storeOpen, setStoreOpen] = useState(false);
   const [sel, setSel]       = useState<Record<string, boolean>>({});
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>(() => {
     const c: Record<number, boolean> = {};
@@ -38,10 +48,11 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
     });
     if (!items.length) { fire('בחר לפחות פריט אחד'); return; }
     if (!date)         { fire('בחר תאריך'); return; }
+    if (!store.trim()) { fire('הזן שם חנות'); return; }
 
     const list: ShoppingList = {
       id: generateListId(), visibleId: generateVisibleId(),
-      userId, date, store: store || 'רמי לוי',
+      userId, date, store: store.trim(),
       items, closed: false, createdAt: new Date().toISOString(),
     };
     await saveShoppingList(list);
@@ -59,10 +70,43 @@ export default function NewListScreen({ userId, master, onCreated, onBack }: Pro
       {/* Sticky filters */}
       <div className="sticky top-[73px] z-40 bg-[#f8f9ff] border-b border-[#e5eeff]">
         <div className="max-w-lg mx-auto px-4 pt-3 pb-2.5">
+
+          {/* Metadata section */}
           <div className="flex gap-2 mb-3">
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputClass + ' flex-1'} />
-            <input placeholder="חנות" value={store} onChange={e => setStore(e.target.value)} className={inputClass} style={{ flex: 0.65 }} />
+            <div className="relative" style={{ flex: 0.65 }}>
+              <input
+                placeholder="חנות *"
+                value={store}
+                onChange={e => setStore(e.target.value)}
+                onFocus={() => recentStores.length > 0 && setStoreOpen(true)}
+                onBlur={() => setTimeout(() => setStoreOpen(false), 150)}
+                className={inputClass + ' w-full'}
+              />
+              {storeOpen && recentStores.length > 0 && (
+                <div className="absolute top-full mt-1 right-0 left-0 bg-white rounded-2xl border border-[#e5eeff] shadow-lg z-50 overflow-hidden"
+                  style={{ animation: 'fadeUp 0.15s ease both' }}>
+                  {recentStores.map(s => (
+                    <button
+                      key={s}
+                      onMouseDown={() => { setStore(s); setStoreOpen(false); }}
+                      className="w-full text-right px-4 py-3 border-none bg-transparent cursor-pointer
+                        text-[14px] font-medium text-[#0b1c30] hover:bg-[#f0f4ff] transition-colors
+                        border-b border-[#f0f4ff] last:border-b-0"
+                      style={{ fontFamily: 'inherit' }}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Divider */}
+          <div className="border-t border-[#e0e0e6] mb-3" />
+
+          {/* List filters section */}
           <div className="relative mb-2.5">
             <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#c7c4d7]" />
             <input

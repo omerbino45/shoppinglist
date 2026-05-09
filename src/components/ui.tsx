@@ -119,7 +119,7 @@ export function Pill({ active, children, onClick }: {
 
 // ═══ inputClass ═══
 export const inputClass = `w-full py-3 px-4 border border-[#c7c4d7] rounded-2xl
-  text-sm outline-none bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
+  text-[16px] outline-none bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
   transition-all font-[inherit] placeholder:text-[#c7c4d7]`;
 
 // ═══ Tag ═══
