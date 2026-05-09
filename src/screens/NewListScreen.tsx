@@ -60,147 +60,164 @@ export default function NewListScreen({ userId, master, lists, onCreated, onBack
   }
 
   return (
-    <div className="min-h-dvh bg-[#f8f9ff] pb-28">
+    <div className="flex flex-col h-dvh bg-[#f8f9ff]">
       <Header
         title="רשימה חדשה"
         subtitle={selCount ? `${selCount} פריטים נבחרו` : 'בחר פריטים'}
         onBack={onBack}
       />
 
-      {/* Sticky filters */}
-      <div className="sticky top-[73px] z-40 bg-[#f8f9ff] border-b border-[#e5eeff]">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-2.5">
+      {/* Scrollable middle */}
+      <div className="flex-1 overflow-y-auto">
 
-          {/* Metadata section */}
-          <div className="flex gap-2 mb-3">
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputClass + ' flex-1'} />
-            <div className="relative" style={{ flex: 0.65 }}>
-              <input
-                placeholder="חנות *"
-                value={store}
-                onChange={e => setStore(e.target.value)}
-                onFocus={() => recentStores.length > 0 && setStoreOpen(true)}
-                onBlur={() => setTimeout(() => setStoreOpen(false), 150)}
-                className={inputClass + ' w-full'}
-              />
-              {storeOpen && recentStores.length > 0 && (
-                <div className="absolute top-full mt-1 right-0 left-0 bg-white rounded-2xl border border-[#e5eeff] shadow-lg z-50 overflow-hidden"
-                  style={{ animation: 'fadeUp 0.15s ease both' }}>
-                  {recentStores.map(s => (
-                    <button
-                      key={s}
-                      onMouseDown={() => { setStore(s); setStoreOpen(false); }}
-                      className="w-full text-right px-4 py-3 border-none bg-transparent cursor-pointer
-                        text-[14px] font-medium text-[#0b1c30] hover:bg-[#f0f4ff] transition-colors
-                        border-b border-[#f0f4ff] last:border-b-0"
-                      style={{ fontFamily: 'inherit' }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+        {/* Sticky filters */}
+        <div className="sticky top-0 z-40 bg-[#f8f9ff] border-b border-[#e5eeff]">
+          <div className="max-w-lg mx-auto px-4 pt-3 pb-2.5">
+
+            {/* Metadata section */}
+            <div className="flex gap-2 mb-3">
+              {/* Date */}
+              <div className="flex flex-col gap-1 flex-1">
+                <span className="text-[11px] font-semibold text-[#464554] pr-1">תאריך *</span>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className={inputClass + ' w-full'}
+                />
+              </div>
+
+              {/* Store with dropdown */}
+              <div className="flex flex-col gap-1 flex-1">
+                <span className="text-[11px] font-semibold text-[#464554] pr-1">חנות *</span>
+                <div className="relative">
+                <input
+                  placeholder="בחר חנות"
+                  value={store}
+                  onChange={e => setStore(e.target.value)}
+                  onFocus={() => recentStores.length > 0 && setStoreOpen(true)}
+                  onBlur={() => setTimeout(() => setStoreOpen(false), 150)}
+                  className={inputClass + ' w-full'}
+                />
+                {storeOpen && recentStores.length > 0 && (
+                  <div className="absolute top-full mt-1 right-0 left-0 bg-white rounded-2xl border border-[#e5eeff] shadow-lg z-50 overflow-hidden"
+                    style={{ animation: 'fadeUp 0.15s ease both' }}>
+                    {recentStores.map(s => (
+                      <button
+                        key={s}
+                        onMouseDown={() => { setStore(s); setStoreOpen(false); }}
+                        className="w-full text-right px-4 py-3 border-none bg-transparent cursor-pointer
+                          text-[14px] font-medium text-[#0b1c30] hover:bg-[#f0f4ff] transition-colors
+                          border-b border-[#f0f4ff] last:border-b-0"
+                        style={{ fontFamily: 'inherit' }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-[#e0e0e6] mb-3" />
+
+            {/* List filters section */}
+            <div className="relative mb-2.5">
+              <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#c7c4d7]" />
+              <input
+                placeholder="חיפוש פריט..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-[16px] outline-none
+                  bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
+                  transition-all font-[inherit] placeholder:text-[#c7c4d7]"
+              />
+            </div>
+            <div className="flex gap-1.5">
+              {(['all', 'monthly', 'occasional'] as const).map(f => (
+                <Pill key={f} active={filter === f} onClick={() => setFilter(f)}>
+                  {f === 'all' ? 'הכל' : f === 'monthly' ? 'חודשי' : 'מדי פעם'}
+                </Pill>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="border-t border-[#e0e0e6] mb-3" />
+        {/* Categories */}
+        <div className="max-w-lg mx-auto px-4 py-3 flex flex-col gap-2">
+          {master.map((cat, ci) => {
+            const items = cat.items
+              .map((item, ii) => ({ ...item, key: `${ci}-${ii}`, checked: !!sel[`${ci}-${ii}`] }))
+              .filter(i => (filter === 'all' || i.freq === filter) && (!search || i.name.includes(search)));
+            if (!items.length) return null;
 
-          {/* List filters section */}
-          <div className="relative mb-2.5">
-            <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#c7c4d7]" />
-            <input
-              placeholder="חיפוש פריט..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-[16px] outline-none
-                bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
-                transition-all font-[inherit] placeholder:text-[#c7c4d7]"
-            />
-          </div>
-          <div className="flex gap-1.5">
-            {(['all', 'monthly', 'occasional'] as const).map(f => (
-              <Pill key={f} active={filter === f} onClick={() => setFilter(f)}>
-                {f === 'all' ? 'הכל' : f === 'monthly' ? 'חודשי' : 'מדי פעם'}
-              </Pill>
-            ))}
-          </div>
+            const isCol  = collapsed[ci] !== false;
+            const catSel = items.filter(i => i.checked).length;
+            const allSel = catSel === items.length && items.length > 0;
+
+            return (
+              <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
+                style={{ borderRight: `4px solid ${cat.color}`, animation: `fadeUp 0.28s ease ${ci * 45}ms both` }}>
+                <button
+                  onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
+                  className="w-full flex items-center gap-3 py-3.5 px-4 cursor-pointer border-none bg-transparent
+                    hover:bg-[#f8f9ff] transition-colors"
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
+                    style={{ background: cat.color + '18', color: cat.color }}>
+                    {cat.icon}
+                  </div>
+                  <div className="flex-1 font-bold text-[14px] text-right" style={{ color: cat.color }}>{cat.name}</div>
+                  {catSel > 0 && (
+                    <span className="text-[11px] py-0.5 px-2.5 rounded-full font-semibold"
+                      style={{ background: allSel ? '#e6f4ea' : '#e1e0ff', color: allSel ? '#006c49' : '#4648d4' }}>
+                      {catSel} נבחרו
+                    </span>
+                  )}
+                  {isCol ? <ChevronDown size={16} className="text-[#c7c4d7] shrink-0" />
+                         : <ChevronUp   size={16} className="text-[#c7c4d7] shrink-0" />}
+                </button>
+
+                {!isCol && (
+                  <div className="px-3 pb-3 border-t border-[#f0f4ff]">
+                    <div className="flex gap-2 mb-2 pt-1">
+                      <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { n[i.key] = true; }); return n; })}
+                        className="flex items-center gap-1.5 border-none bg-[#e1e0ff] text-[#4648d4]
+                          py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer active:scale-95 transition-all"
+                        style={{ fontFamily: 'inherit' }}>
+                        <Check size={11} /> בחר הכל
+                      </button>
+                      <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { delete n[i.key]; }); return n; })}
+                        className="flex items-center gap-1.5 border-none bg-[#f0f4ff] text-[#464554]
+                          py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer active:scale-95 transition-all"
+                        style={{ fontFamily: 'inherit' }}>
+                        נקה
+                      </button>
+                    </div>
+                    {items.map((item, ii) => (
+                      <div key={item.key}
+                        onClick={() => setSel(p => ({ ...p, [item.key]: !p[item.key] }))}
+                        className="flex items-center gap-3 py-2.5 px-1.5 rounded-xl cursor-pointer hover:bg-[#f0f4ff] transition-colors"
+                        style={{ animation: `fadeUp 0.2s ease ${ii * 30}ms both` }}>
+                        <Checkbox checked={item.checked} />
+                        <div className="flex-1 text-sm text-[#0b1c30]">{item.name}</div>
+                        <FreqTag freq={item.freq} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="max-w-lg mx-auto px-4 py-3 flex flex-col gap-2">
-        {master.map((cat, ci) => {
-          const items = cat.items
-            .map((item, ii) => ({ ...item, key: `${ci}-${ii}`, checked: !!sel[`${ci}-${ii}`] }))
-            .filter(i => (filter === 'all' || i.freq === filter) && (!search || i.name.includes(search)));
-          if (!items.length) return null;
-
-          const isCol  = collapsed[ci] !== false;
-          const catSel = items.filter(i => i.checked).length;
-          const allSel = catSel === items.length && items.length > 0;
-
-          return (
-            <div key={ci} className="bg-white rounded-2xl border border-[#e5eeff] overflow-hidden shadow-sm"
-              style={{ borderRight: `4px solid ${cat.color}`, animation: `fadeUp 0.28s ease ${ci * 45}ms both` }}>
-              <button
-                onClick={() => setCollapsed(p => ({ ...p, [ci]: !isCol }))}
-                className="w-full flex items-center gap-3 py-3.5 px-4 cursor-pointer border-none bg-transparent
-                  hover:bg-[#f8f9ff] transition-colors"
-                style={{ fontFamily: 'inherit' }}
-              >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
-                  style={{ background: cat.color + '18', color: cat.color }}>
-                  {cat.icon}
-                </div>
-                <div className="flex-1 font-bold text-[14px] text-right" style={{ color: cat.color }}>{cat.name}</div>
-                {catSel > 0 && (
-                  <span className="text-[11px] py-0.5 px-2.5 rounded-full font-semibold"
-                    style={{ background: allSel ? '#e6f4ea' : '#e1e0ff', color: allSel ? '#006c49' : '#4648d4' }}>
-                    {catSel} נבחרו
-                  </span>
-                )}
-                {isCol ? <ChevronDown size={16} className="text-[#c7c4d7] shrink-0" />
-                       : <ChevronUp   size={16} className="text-[#c7c4d7] shrink-0" />}
-              </button>
-
-              {!isCol && (
-                <div className="px-3 pb-3 border-t border-[#f0f4ff]">
-                  <div className="flex gap-2 mb-2 pt-1">
-                    <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { n[i.key] = true; }); return n; })}
-                      className="flex items-center gap-1.5 border-none bg-[#e1e0ff] text-[#4648d4]
-                        py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer active:scale-95 transition-all"
-                      style={{ fontFamily: 'inherit' }}>
-                      <Check size={11} /> בחר הכל
-                    </button>
-                    <button onClick={() => setSel(p => { const n = { ...p }; items.forEach(i => { delete n[i.key]; }); return n; })}
-                      className="flex items-center gap-1.5 border-none bg-[#f0f4ff] text-[#464554]
-                        py-1.5 px-3 rounded-lg text-[11px] font-semibold cursor-pointer active:scale-95 transition-all"
-                      style={{ fontFamily: 'inherit' }}>
-                      נקה
-                    </button>
-                  </div>
-                  {items.map((item, ii) => (
-                    <div key={item.key}
-                      onClick={() => setSel(p => ({ ...p, [item.key]: !p[item.key] }))}
-                      className="flex items-center gap-3 py-2.5 px-1.5 rounded-xl cursor-pointer hover:bg-[#f0f4ff] transition-colors"
-                      style={{ animation: `fadeUp 0.2s ease ${ii * 30}ms both` }}>
-                      <Checkbox checked={item.checked} />
-                      <div className="flex-1 text-sm text-[#0b1c30]">{item.name}</div>
-                      <FreqTag freq={item.freq} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Bottom bar */}
-      <div className="fixed bottom-0 w-full bg-white/95 backdrop-blur-sm
-        border-t border-[#e5eeff] py-3 px-4 flex gap-2.5 z-50"
-        style={{ maxWidth: 390, left: '50%', transform: 'translateX(-50%)', boxShadow: '0 -4px 20px rgba(0,0,0,0.05)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      {/* Bottom bar — always visible, never covered by keyboard */}
+      <div className="shrink-0 bg-white/95 backdrop-blur-sm border-t border-[#e5eeff] py-3 px-4 flex gap-2.5"
+        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.05)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <button onClick={onBack}
           className="flex-1 py-3.5 border-none rounded-2xl font-bold text-sm cursor-pointer
             bg-[#f0f4ff] text-[#464554] active:scale-95 transition-all"
