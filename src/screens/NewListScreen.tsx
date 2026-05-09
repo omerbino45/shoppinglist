@@ -113,7 +113,7 @@ export default function NewListScreen({ userId, master, lists, onCreated, onBack
               placeholder="חיפוש פריט..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-sm outline-none
+              className="w-full py-2.5 pr-10 pl-4 border border-[#c7c4d7] rounded-2xl text-[16px] outline-none
                 bg-[#eff4ff] focus:border-[#4648d4] focus:ring-2 focus:ring-[#e1e0ff]
                 transition-all font-[inherit] placeholder:text-[#c7c4d7]"
             />
